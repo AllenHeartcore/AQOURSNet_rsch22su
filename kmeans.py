@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from tqdm import tqdm
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 max_iter = 300
 tol = 1e-4
@@ -12,19 +11,18 @@ def initialize(X, num_clusters):
     initial_state = X[indices]
     return initial_state
 
-def kmeans(X, num_clusters):
-    print(f'Running KMeans on {device}..')
+def kmeans(X, kwargs):
     X = X.float()
-    X = X.to(device)
-    initial_state = initialize(X, num_clusters)
+    X = X.to(kwargs.device)
+    initial_state = initialize(X, kwargs.num_shapelets)
     iteration = 0
     tqdm_meter = tqdm(desc='[Running KMeans]')
     while iteration < max_iter:
-        dis = pairwise_distance(X, initial_state)
+        dis = pairwise_distance(X, initial_state, kwargs.device)
         choice_cluster = torch.argmin(dis, dim=1)
         initial_state_pre = initial_state.clone()
-        for index in range(num_clusters):
-            selected = torch.nonzero(choice_cluster == index).squeeze().to(device)
+        for index in range(kwargs.num_shapelets):
+            selected = torch.nonzero(choice_cluster == index).squeeze().to(kwargs.device)
             selected = torch.index_select(X, 0, selected)
             initial_state[index] = selected.mean(dim=0)
         center_shift = torch.sum(torch.sqrt(torch.sum( \
@@ -40,7 +38,7 @@ def kmeans(X, num_clusters):
             break
     return dis.cpu(), choice_cluster.cpu()
 
-def pairwise_distance(data1, data2):
+def pairwise_distance(data1, data2, device):
     data1, data2 = data1.to(device), data2.to(device)
     A = data1.unsqueeze(dim=1)
     B = data2.unsqueeze(dim=0)

@@ -3,17 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 import xgboost as xgb
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class GAT(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers, heads, neg_slope, dropout):
+    def __init__(self, output_dim, kwargs):
         super(GAT, self).__init__()
         self.layers = nn.ModuleList(
-            [GATConv(input_dim,          hidden_dim, heads=heads)] +
-            [GATConv(hidden_dim * heads, hidden_dim, heads=heads)] * (num_layers - 2) +
-            [GATConv(hidden_dim * heads, output_dim, heads=1, concat=False)])
-        self.neg_slope = neg_slope
-        self.dropout = dropout
+            [GATConv(kwargs.num_segments,              kwargs.hidden_dim, heads=kwargs.heads)] +
+            [GATConv(kwargs.hidden_dim * kwargs.heads, kwargs.hidden_dim, heads=kwargs.heads)] * (kwargs.num_layers - 2) +
+            [GATConv(kwargs.hidden_dim * kwargs.heads, output_dim, heads=1, concat=False)])
+        self.neg_slope = kwargs.neg_slope
+        self.dropout = kwargs.dropout
     def forward(self, x, edge_index):
         for layer in self.layers:
             x = layer(x, edge_index)
@@ -68,17 +67,17 @@ class FCResidualNetwork(nn.Module):
         return self.blocks(x)
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_dim, hidden_dim, embed_dim, output_dim, num_layers, heads, neg_slope, dropout, tail_type):
+    def __init__(self, kwargs):
         super(NeuralNetwork, self).__init__()
-        if tail_type == 'none' or 'xgboost':
-            self.gat = GAT(input_dim, hidden_dim, output_dim, num_layers, heads, neg_slope, dropout)
+        if kwargs.tail == 'none' or 'xgboost':
+            self.gat = GAT(kwargs.num_classes, kwargs)
             self.tail = None
         else:
-            self.gat = GAT(input_dim, hidden_dim, embed_dim, num_layers, heads, neg_slope, dropout)
-            if tail_type == 'mlp':
-                self.tail = MultilayerPerceptron(embed_dim, output_dim)
-            elif tail_type == 'resnet':
-                self.tail = FCResidualNetwork(embed_dim, output_dim)
+            self.gat = GAT(kwargs.embed_dim, kwargs)
+            if kwargs.tail == 'mlp':
+                self.tail = MultilayerPerceptron(kwargs.embed_dim, kwargs.num_classes)
+            elif kwargs.tail == 'resnet':
+                self.tail = FCResidualNetwork(kwargs.embed_dim, kwargs.num_classes)
             else:
                 raise NotImplementedError
     def forward(self, x, edge_index):
@@ -86,10 +85,10 @@ class NeuralNetwork(nn.Module):
         if self.tail is not None: x = self.tail(x)
         return x
 
-def train(model, dataset, labels, loss_func, optimizer, tail_type):
+def train(model, dataset, labels, loss_func, optimizer, kwargs):
     model.train()
     outputs = []
-    labels = torch.tensor(labels).to(device)
+    labels = torch.tensor(labels).to(kwargs.device)
     for graph in dataset:
         outputs.append(model(graph.x, graph.edge_index))
     outputs = torch.stack(outputs)
@@ -97,15 +96,15 @@ def train(model, dataset, labels, loss_func, optimizer, tail_type):
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    if tail_type == 'xgboost':
-        pass
+    if kwargs.tail == 'xgboost':
+        raise NotImplementedError
     return loss.item(), (outputs.argmax(1) == labels).float().mean().item()
 
 @torch.no_grad()
-def test(model, dataset, labels):
+def test(model, dataset, labels, kwargs):
     model.eval()
     outputs = []
-    labels = torch.tensor(labels).to(device)
+    labels = torch.tensor(labels).to(kwargs.device)
     for graph in dataset:
         outputs.append(model(graph.x, graph.edge_index).argmax())
     return (torch.stack(outputs) == labels).float().mean().item()

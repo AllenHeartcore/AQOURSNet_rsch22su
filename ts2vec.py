@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def pad_nan_to_target(array, target_length, axis=0):
     pad_size = target_length - array.shape[axis]
@@ -150,13 +149,14 @@ class TSEncoder(nn.Module):
         return x
 
 class TS2Vec:
-    def __init__(self, input_dims, output_dims=320, hidden_dims=64, depth=10, device='cuda'):
+    def __init__(self, input_dims, device, output_dims=320, hidden_dims=64, depth=10):
         super().__init__()
         self._net = TSEncoder(input_dims=input_dims, output_dims=output_dims, hidden_dims=hidden_dims, depth=depth).to(device)
         self.net = torch.optim.swa_utils.AveragedModel(self._net)
         self.net.update_parameters(self._net)
         self.n_epochs = 0
         self.n_iters = 0
+        self.device = device
 
     def fit(self, train_data, n_epochs=20):
         temporal_missing = np.isnan(train_data).all(axis=-1).any(axis=0)
@@ -174,7 +174,7 @@ class TS2Vec:
             n_epoch_iters = 0
             for batch in train_loader:
                 x = batch[0]
-                x = x.to(device)
+                x = x.to(self.device)
                 ts_l = x.size(1)
                 crop_l = np.random.randint(low=2, high=ts_l+1)
                 crop_left = np.random.randint(ts_l - crop_l + 1)
@@ -201,7 +201,7 @@ class TS2Vec:
         return loss_log
 
     def _eval_with_pooling(self, x):
-        out = self.net(x.to(device, non_blocking=True), None)
+        out = self.net(x.to(self.device, non_blocking=True), None)
         out = F.max_pool1d(
             out.transpose(1, 2),
             kernel_size = out.size(1),

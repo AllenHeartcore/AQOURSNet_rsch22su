@@ -6,21 +6,31 @@ Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yang
 This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
 
 <br>
-<font size=5>
 
-<font color=#00A1E9>**A**</font>utoencoded <br>
-<font color=#00A1E9>**Q**</font>uantification <br>
-<font color=#00A1E9>**O**</font>f <br>
-<font color=#00A1E9>**U**</font>nsupervised <br>
-<font color=#00A1E9>**R**</font>epresentative <br>
-<font color=#00A1E9>**S**</font>hapelets <br>
-
-</font>
+## <font color=#00A1E9>**A**</font>utoencoded <br> <font color=#00A1E9>**Q**</font>uantification <br> <font color=#00A1E9>**O**</font>f <br> <font color=#00A1E9>**U**</font>nsupervised <br> <font color=#00A1E9>**R**</font>epresentative <br> <font color=#00A1E9>**S**</font>hapelets <br>
 <br>
 
 ## Running the Program
-    $ python main.py
-- ***WARNING:** the condensed `ts2vec` module has **not** been thoroughly tested. <br> Clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder in case it fails.*
+    $ pip install -r Requirements.txt
+    $ python main.py [-h] \
+                     [--dataset DATASET] \                          # Data
+                     [--log-filename LOG_FILENAME] \
+                     [--num-shapelets NUM_SHAPELETS] \              # Shapelets
+                     [--num-segments NUM_SEGMENTS] \
+                     [--pruning-percentile PRUNING_PERCENTILE] \
+                     [--hidden-dim HIDDEN_DIM] \                    # GAT
+                     [--embed-dim EMBED_DIM] \
+                     [--num-layers NUM_LAYERS] \
+                     [--heads HEADS] \
+                     [--neg-slope NEG_SLOPE] \
+                     [--dropout DROPOUT] \
+                     [--tail TAIL] \
+                     [--epochs EPOCHS] \                            # Training
+                     [--lr LR] \
+                     [--weight-decay WEIGHT_DECAY] \
+                     [--ts2vec] \                                   # Enhancements
+                     [--dtw]
+- ***WARNING:** The condensed `ts2vec` module has **not** been thoroughly tested. Use with caution. <br> Clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder in case it fails.*
 
 ## Model Pipeline
 0. Data preparation
@@ -40,8 +50,8 @@ This work is protected under the [MIT License](https://opensource.org/licenses/M
     - `neural_network` - SOTA [DNNs](https://doi.org/10.1109/IJCNN.2017.7966039) like [Dynamic](https://doi.org/10.48550/arXiv.1906.00917), [Adversarial](https://doi.org/10.48550/arXiv.1906.00917), [Adv. Dynamic](https://doi.org/10.1609/AAAI.v34i04.5948), [ShapeNet](https://ojs.aaai.org/index.php/AAAI/article/view/17018), [BSPCover](https://doi.org/10.1109/ICDE51399.2021.00254), etc. ([Review](https://doi.org/10.1007/s10618-019-00619-1))
 - `cached_programs` - historical versions and experiments of KMeans, SVM, MLP, ResNet, Time2Vec, hierarchies, etc. 
     - ***WARNING:** Codes in the cache are not optimized for environment compatibility and may not run properly.*
-- `affiliated_licenses` - LICENSEs for code segments from [yuezhihan](https://github.com/yuezhihan/ts2vec/blob/main/LICENSE), [subhadarship](https://github.com/subhadarship/kmeans_pytorch/blob/master/LICENSE), [DTW](https://github.com/DynamicTimeWarping/dtw-python/blob/master/LICENSE), and [pyg-team](https://github.com/pyg-team/pytorch_geometric/blob/master/LICENSE)@GitHub. 
-- `ucr_dataset` - a neatly formatted version of [the UCR Dataset](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/UCRArchive_2018.zip) in `.npz` format
+- `affiliated_licenses` - LICENSEs for code segments from [yuezhihan](https://github.com/yuezhihan/ts2vec/blob/main/LICENSE), [subhadarship](https://github.com/subhadarship/kmeans_pytorch/blob/master/LICENSE), [DTW](https://github.com/DynamicTimeWarping/dtw-python/blob/master/LICENSE), and [pyg-team](https://github.com/pyg-team/pytorch_geometric/blob/master/LICENSE). 
+- `ucr_dataset` - a neatly formatted version of [the UCR Dataset](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/UCRArchive_2018.zip) in compressed `.npz`
     - The numpy arrays contained in each file have keys `train_data`, `train_label`, `test_data`, `test_label`
     - `*_data` has shape `(num_samples, num_features)`, `*_label` has shape `(num_samples,)`
 
@@ -53,7 +63,7 @@ This work is protected under the [MIT License](https://opensource.org/licenses/M
         - `kmeans.py` (#1: `kmeans`)
         - `dtw`
     - `network.py` (#4: `GAT`, #5: `MultilayerPerceptron` & `FCResidualNetwork`)
-        - `xgboost`
+        - `xgboost` (**TO BE IMPLEMENTED**)
 
 ## Credits
 - Original Time2Graph model by [Cheng et al., 2020](https://ojs.aaai.org/index.php/AAAI/article/view/5769) & [Cheng et al., 2021](https://ieeexplore.ieee.org/document/9477138), code inspired by [petecheng@GitHub](https://github.com/petecheng/Time2GraphPlus)
