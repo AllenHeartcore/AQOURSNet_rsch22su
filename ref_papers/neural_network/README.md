@@ -21,9 +21,9 @@
 - **Dataset-level**: $k$ shapelets; use shapelet transform to generate feature $\textbf{h}_i^D$
 - **Category-level**: $k' = \lceil\frac{k}{N_\textrm{cat}}\rceil$ shapelets *per category*; the $j^\textrm{th}$ category has feature $\textbf{h}_{i, j}^C$ ($N_\textrm{cat}$ in total)
 - **Sample-level**: Convolve over concat. subseqs.: $v_j = \textbf{W}_j \ast \textbf{O} + b_j$ is the $j^\textrm{th}$ generated shapelet ($k$ in total), feature $\textbf{h}_i^S$
-    - $L$ is the length, $P$ is the number of subsequences; $\textbf{W}_j \in \R^{5 \times P}$, $\textbf{O} \in \R^{L \times P}$, $b_j \in \R$
-- **Classification loss**: pred. value $P = \textrm{softmax}(\textbf{W}^\textrm{out}\textrm{concat}(h_i^D, h_i^C, h_i^S))$; $\textbf{W}^\textrm{out} \in \R^{N_\textrm{cat} \times 3k}$, $h_i^\ast \in \R^k$
-- **Auxiliary loss**: pred. value $P = \sigma(\textbf{w} \cdot \textbf{h})$; $\textbf{w} \in \R^{N_\textrm{cat} \times k'}$, $\textbf{h} \in \R^{k'}$ (no concat., otherwise deprecated to dataset-level)
+    - $L$ is the length, $P$ is the number of subsequences; $\textbf{W}_j \in \Bbb{R}^{5 \times P}$, $\textbf{O} \in \Bbb{R}^{L \times P}$, $b_j \in \Bbb{R}$
+- **Classification loss**: pred. value $P = \textrm{softmax}(\textbf{W}^\textrm{out}\textrm{concat}(h_i^D, h_i^C, h_i^S))$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times 3k}$, $h_i^\ast \in \Bbb{R}^k$
+- **Auxiliary loss**: pred. value $P = \sigma(\textbf{w} \cdot \textbf{h})$; $\textbf{w} \in \Bbb{R}^{N_\textrm{cat} \times k'}$, $\textbf{h} \in \Bbb{R}^{k'}$ (no concat., otherwise deprecated to dataset-level)
 - Learnables: dataset-level, category-level shapelets; $\textbf{W}_j$, $b_j$ (sample-level conv.), $\textbf{W}^\textrm{out}$ (cls. loss), $\textbf{w}$ (aux. loss)
 
 ![19ma](img/19ma.png)
@@ -40,7 +40,7 @@
 ## Adversarial dynamic shapelet network: [Ma, 2020](https://doi.org/10.1609/AAAI.v34i04.5948) -- **Global conv. kernels, 3 losses**
 - Current issues: shapelets deviate from the subsequences ("adversarial"); fixed shapelets ("dynamic")
 - **Shapelet generator**: same as ("Sample-level", TSN)
-- **Dynamic shapelet transformation**: $P = \textrm{softmax}(\textbf{W}^\textrm{out}h_i)$; $\textbf{W}^\textrm{out} \in \R^{N_\textrm{cat} \times k}$, $h_i \in \R^k$ - *fully dynamic???*
+- **Dynamic shapelet transformation**: $P = \textrm{softmax}(\textbf{W}^\textrm{out}h_i)$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times k}$, $h_i \in \Bbb{R}^k$ - *fully dynamic???*
 - **Adversarial training strategy**: "two-player minimax game"; $D$ is a *two-layer conv-nn*
 - **Diversity Regularization Term**: $\textrm{similarity} = e^{-||\Delta d||}$
 - Losses: $L_\textrm{cls}$ - cross entropy, $L_\textrm{adv}$ - $-\frac{1}{nk}\sum_{i=1}^n\sum_{j=1}^k\log(\textrm{discriminator}(t_i, v_j))$, $L_\textrm{div}$ - Frobenius norm
@@ -49,12 +49,12 @@
     - Learnables: $\textbf{W}_j$, $b_j$ (conv. kernels), $\textbf{W}_\textrm{out}$ (linear classification layer), $\theta_D$ (conv-nn), $\theta_\textrm{ADSN}$ (ensemble of params.)
     - For $n_E$ epochs and $\lceil\frac{n}{n_B}\rceil$ batches
         - For time series $i = 1 : n_B$
-            - Concatenate subsequences into matrix $\textbf{O}_i \in \R^{m \times (l-m+1)}$
+            - Concatenate subsequences into matrix $\textbf{O}_i \in \Bbb{R}^{m \times (l-m+1)}$
             - For "dynamic" shapelets $j = 1 : k$
-                - Compute shapelet $v_{i, j} = \textbf{W}_j \ast \textbf{O}_i + b_j$ ($\textbf{W}_j \in \R^{\textrm{width} \times (l-m+1)}$, $b_j \in \R$)
+                - Compute shapelet $v_{i, j} = \textbf{W}_j \ast \textbf{O}_i + b_j$ ($\textbf{W}_j \in \Bbb{R}^{\textrm{width} \times (l-m+1)}$, $b_j \in \Bbb{R}$)
                 - Compute distance $h_{i, j} = \min_{p = 1 : (l-m+1)} |v_{i, j} - t_{i, p}|$
-            - Compute predicted category $\hat{\textbf{y}}_i = \textrm{Softmax}(\textbf{W}_\textrm{out} \textbf{h}_i)$ ($\textbf{W}_\textrm{out} \in \R^{N_\textrm{cat} \times k}$, $\textbf{h}_i \in \R^k$, $\hat{\textbf{y}}_i \in \R^{N_\textrm{cat}}$)
-            - Compute similarity matrix $\textbf{G}_i [j, j'] = e^{-|v_{i, j} - v_{i, j'}|}$ ($\textbf{G}_i \in \R^{k \times k}$; vectorization may apply)
+            - Compute predicted category $\hat{\textbf{y}}_i = \textrm{Softmax}(\textbf{W}_\textrm{out} \textbf{h}_i)$ ($\textbf{W}_\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times k}$, $\textbf{h}_i \in \Bbb{R}^k$, $\hat{\textbf{y}}_i \in \Bbb{R}^{N_\textrm{cat}}$)
+            - Compute similarity matrix $\textbf{G}_i [j, j'] = e^{-|v_{i, j} - v_{i, j'}|}$ ($\textbf{G}_i \in \Bbb{R}^{k \times k}$; vectorization may apply)
         - For $\textrm{numIter}$ cycles of learning discriminator $D$
             - Compute $L_D = -\sum_i \sum_p \log D(t_{i, p}) -\sum_i \sum_j \log D(1-v_{i, j})$ ($D(\cdot)$ - similarity to real subseqs.)
             - SGD the parameters: $\theta_D = \theta_D - \eta \frac{\partial L_D}{\partial \theta_D}$
@@ -95,7 +95,7 @@
     - Initialize $\textbf{S}$ using KMeans on each channel
 - **Learning objective**: three components:
     - $\textrm{Loss}_\textrm{Classification} = -\sum_i y_i \log \hat{y}_i$
-    - $\textrm{Loss}_\textrm{Redundancy} = \sum_j \frac{\sigma(G_j)}{k}$, $\sigma(G_j) = \frac{1}{1+e^{-\theta G_j}}$ - $\textbf{G} \in \R^k$ (gating params.), $\theta$ $\gg 1$
+    - $\textrm{Loss}_\textrm{Redundancy} = \sum_j \frac{\sigma(G_j)}{k}$, $\sigma(G_j) = \frac{1}{1+e^{-\theta G_j}}$ - $\textbf{G} \in \Bbb{R}^k$ (gating params.), $\theta$ $\gg 1$
         - Suppress **redundant** shapelets: sigmoid forces $\textbf{G}$ to be *binary*
     - $\textrm{Loss}_\textrm{Correlation} = \max_{i, j} |\textrm{CorrMat}(\textbf{M} \cdot \textrm{diag}(\sigma(G_j)))_{ij}|$, $M_{ij} = \textrm{dist}(s_i, v_j)$
         - Suppress **similar** shapelets: now $\textbf{G}$ is part of the differentiable computing graph! 
