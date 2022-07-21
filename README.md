@@ -5,32 +5,46 @@ Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yang
 
 This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
 
+**IMPORTANT:** This version of demo code works with the attached `ucr_dataset`. <br>
+Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22su/releases/tag/AQOURSNet) for compatibility support with custom dataset. 
+
 <br>
 
-## <font color=#00A1E9>**A**</font>utoencoded <br> <font color=#00A1E9>**Q**</font>uantification <br> <font color=#00A1E9>**O**</font>f <br> <font color=#00A1E9>**U**</font>nsupervised <br> <font color=#00A1E9>**R**</font>epresentative <br> <font color=#00A1E9>**S**</font>hapelets <br>
+<font color=#00A1E9>**A**</font>utoencoded <br> 
+<font color=#00A1E9>**Q**</font>uantification <br> 
+<font color=#00A1E9>**O**</font>f <br> 
+<font color=#00A1E9>**U**</font>nsupervised <br> 
+<font color=#00A1E9>**R**</font>epresentative <br> 
+<font color=#00A1E9>**S**</font>hapelets <br>
+
 <br>
+
+![Diagram](presentation/aqoursnet_diagram.png)
 
 ## Running the Program
     $ pip install -r Requirements.txt
     $ python main.py [-h] \
-                     [--dataset DATASET] \                          # Data
-                     [--log-filename LOG_FILENAME] \
-                     [--num-shapelets NUM_SHAPELETS] \              # Shapelets
-                     [--num-segments NUM_SEGMENTS] \
-                     [--pruning-percentile PRUNING_PERCENTILE] \
-                     [--hidden-dim HIDDEN_DIM] \                    # GAT
-                     [--embed-dim EMBED_DIM] \
-                     [--num-layers NUM_LAYERS] \
-                     [--heads HEADS] \
-                     [--neg-slope NEG_SLOPE] \
-                     [--dropout DROPOUT] \
-                     [--tail TAIL] \
-                     [--epochs EPOCHS] \                            # Training
-                     [--lr LR] \
-                     [--weight-decay WEIGHT_DECAY] \
-                     [--ts2vec] \                                   # Enhancements
+                     [--seed                SEED] \                  # Data
+                     [--dataset             DATASET] \
+                     [--device              DEVICE] \
+                     [--num-shapelets       NUM_SHAPELETS] \         # Shapelets
+                     [--num-segments        NUM_SEGMENTS] \
+                     [--pruning-percentile  PRUNING_PERCENTILE] \
+                     [--hidden-dim          HIDDEN_DIM] \            # GAT
+                     [--embed-dim           EMBED_DIM] \
+                     [--num-layers          NUM_LAYERS] \
+                     [--heads               HEADS] \
+                     [--neg-slope           NEG_SLOPE] \
+                     [--dropout             DROPOUT] \
+                     [--tail                TAIL] \
+                     [--epochs              EPOCHS] \                # Training
+                     [--batch-size          BATCH_SIZE]
+                     [--lr                  LR] \
+                     [--weight-decay        WEIGHT_DECAY] \
+                     [--ts2vec] \                                    # Enhancements
                      [--dtw]
-- ***WARNING:** The condensed `ts2vec` module has **not** been thoroughly tested. Use with caution. <br> Clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder in case it fails.*
+
+- ***WARNING:** The condensed `ts2vec.py` has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
 
 ## Model Pipeline
 0. Data preparation
@@ -54,6 +68,7 @@ This work is protected under the [MIT License](https://opensource.org/licenses/M
 - `ucr_dataset` - a neatly formatted version of [the UCR Dataset](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/UCRArchive_2018.zip) in compressed `.npz`
     - The numpy arrays contained in each file have keys `train_data`, `train_label`, `test_data`, `test_label`
     - `*_data` has shape `(num_samples, num_features)`, `*_label` has shape `(num_samples,)`
+- `presentation` - presentation materials including slides and diagrams
 
 ## Call Hierarchy
 - `main.py`
@@ -61,7 +76,7 @@ This work is protected under the [MIT License](https://opensource.org/licenses/M
     - `construct_graph.py` (#1 wrapper: `extract_shapelets`, #2: `embed_series`, #3: `adjacency_matrix`)
         - `ts2vec.py` (#1 optional enhancement: `TS2Vec`)
         - `kmeans.py` (#1: `kmeans`)
-        - `dtw`
+        - `dtw` (#2 optional enhancement: `dtw`)
     - `network.py` (#4: `GAT`, #5: `MultilayerPerceptron` & `FCResidualNetwork`)
         - `xgboost` (**TO BE IMPLEMENTED**)
 
