@@ -1,45 +1,45 @@
 import numpy as np
 import torch
-from dtw import dtw
-from kmeans import kmeans
 from ts2vec import TS2Vec
+from kmeans import kmeans
+from dtw import dtw
 from tqdm import tqdm
 from sklearn.preprocessing import minmax_scale
 
 # series: amount n, length l
 # shapelets: amount k, length m
 
-def extract_shapelets(series_set, len_shapelet, kwargs):
+def extract_shapelets(series_set, len_shapelet, args):
     (_, l) = series_set.shape
     cands = np.concatenate([series_set[:, i : i + len_shapelet] \
                             for i in range(l - len_shapelet + 1)])
-    if kwargs.ts2vec:
+    if args.ts2vec:
         if cands.ndim == 2: cands = np.expand_dims(cands, axis=2)
-        model = TS2Vec(cands.shape[2], kwargs.device)
+        model = TS2Vec(cands.shape[2], args.device)
         model.fit(cands)
         cands = model.encode(cands)
-    dist, classes = kmeans(torch.from_numpy(cands), kwargs)
+    dist, classes = kmeans(torch.from_numpy(cands), args)
     dist = dist.numpy().min(axis=1)
     shapelets = []
-    for i in range(kwargs.num_shapelets):
+    for i in range(args.num_shapelets):
         shapelets.append(cands[classes == i][np.argmin(dist[classes == i])])
     return np.stack(shapelets) # shape = (k, m)
 
-def segmented_distance(series, shapelet, kwargs):
+def segmented_distance(series, shapelet, args):
     (l,), (m,) = series.shape, shapelet.shape
     if l % m != 0: series = series[:-(l % m)]
-    segments = series.reshape(-1, m)[:kwargs.num_segments] # shape = (l / m, m)
-    if kwargs.dtw:
+    segments = series.reshape(-1, m)[:args.num_segments] # shape = (l / m, m)
+    if args.dtw:
         return np.array([dtw(shapelet, segment).distance for segment in segments])
     else:
         return np.linalg.norm(segments - shapelet, axis=1) # shape = (l / m,)
 
-def embed_series(series_set, shapelets, kwargs):
+def embed_series(series_set, shapelets, args):
     (n, _), (k, _) = series_set.shape, shapelets.shape
-    embedding = np.zeros((n, k, kwargs.num_segments))
+    embedding = np.zeros((n, k, args.num_segments))
     for i, series in tqdm(enumerate(series_set), desc='[Embedding Series]'):
         for j, shapelet in enumerate(shapelets):
-            embedding[i, j] = segmented_distance(series, shapelet, kwargs)
+            embedding[i, j] = segmented_distance(series, shapelet, args)
     return embedding
 
 def adjacency_matrix(embedding, args):

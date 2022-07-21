@@ -1,23 +1,24 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GATConv
+from torch_geometric.nn import GATConv, global_mean_pool
 import xgboost as xgb
 
 class GAT(nn.Module):
-    def __init__(self, output_dim, kwargs):
+    def __init__(self, output_dim, args):
         super(GAT, self).__init__()
         self.layers = nn.ModuleList(
-            [GATConv(kwargs.num_segments,              kwargs.hidden_dim, heads=kwargs.heads)] +
-            [GATConv(kwargs.hidden_dim * kwargs.heads, kwargs.hidden_dim, heads=kwargs.heads)] * (kwargs.num_layers - 2) +
-            [GATConv(kwargs.hidden_dim * kwargs.heads, output_dim, heads=1, concat=False)])
-        self.neg_slope = kwargs.neg_slope
-        self.dropout = kwargs.dropout
-    def forward(self, x, edge_index):
+            [GATConv(args.num_segments,            args.hidden_dim, heads=args.heads)] +
+            [GATConv(args.hidden_dim * args.heads, args.hidden_dim, heads=args.heads)] * (args.num_layers - 2) +
+            [GATConv(args.hidden_dim * args.heads, output_dim, heads=1, concat=False)])
+        self.neg_slope = args.neg_slope
+        self.dropout = args.dropout
+    def forward(self, x, edge_index, batch):
         for layer in self.layers:
             x = layer(x, edge_index)
             x = F.leaky_relu(x, self.neg_slope)
             x = F.dropout(x, p=self.dropout, training=self.training)
+        x = global_mean_pool(x, batch)
         return x
 
 class MultilayerPerceptron(nn.Module):
@@ -67,47 +68,53 @@ class FCResidualNetwork(nn.Module):
         return self.blocks(x)
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, kwargs):
+    def __init__(self, args):
         super(NeuralNetwork, self).__init__()
-        if kwargs.tail == 'none' or 'xgboost':
-            self.gat = GAT(kwargs.num_classes, kwargs)
+        if args.tail == 'none':
+            self.gat = GAT(args.num_classes, args)
             self.tail = None
+        if args.tail == 'xgboost':
+            raise NotImplementedError
         else:
-            self.gat = GAT(kwargs.embed_dim, kwargs)
-            if kwargs.tail == 'mlp':
-                self.tail = MultilayerPerceptron(kwargs.embed_dim, kwargs.num_classes)
-            elif kwargs.tail == 'resnet':
-                self.tail = FCResidualNetwork(kwargs.embed_dim, kwargs.num_classes)
+            self.gat = GAT(args.embed_dim, args)
+            if args.tail == 'mlp':
+                self.tail = MultilayerPerceptron(args.embed_dim, args.num_classes)
+            elif args.tail == 'resnet':
+                self.tail = FCResidualNetwork(args.embed_dim, args.num_classes)
             else:
                 raise NotImplementedError
-    def forward(self, x, edge_index):
-        x = self.gat(x, edge_index).mean(0)
+    def forward(self, x, edge_index, batch):
+        x = self.gat(x, edge_index, batch)
         if self.tail is not None: x = self.tail(x)
         return x
 
-def train(model, dataset, labels, loss_func, optimizer, kwargs):
+def train(model, loader, loss_func, optimizer, args):
     model.train()
-    outputs = []
-    labels = torch.tensor(labels).to(kwargs.device)
-    for graph in dataset:
-        outputs.append(model(graph.x, graph.edge_index))
-    outputs = torch.stack(outputs)
-    loss = loss_func(outputs, labels.long())
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    if kwargs.tail == 'xgboost':
-        raise NotImplementedError
-    return loss.item(), (outputs.argmax(1) == labels).float().mean().item()
+    total_loss, num_correct, num_samples = 0., 0, 0
+    for batch in loader:
+        batch = batch.to(args.device)
+        output = model(batch.x, batch.edge_index, batch.batch)
+        loss = loss_func(output, batch.y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+        num_correct += (output.argmax(dim=1) == batch.y).sum().item()
+        num_samples += len(batch.y)
+    torch.cuda.empty_cache()
+    return total_loss / num_samples, num_correct / num_samples
 
 @torch.no_grad()
-def test(model, dataset, labels, kwargs):
+def test(model, loader, args):
     model.eval()
-    outputs = []
-    labels = torch.tensor(labels).to(kwargs.device)
-    for graph in dataset:
-        outputs.append(model(graph.x, graph.edge_index).argmax())
-    return (torch.stack(outputs) == labels).float().mean().item()
+    num_correct, num_samples = 0, 0
+    for batch in loader:
+        batch = batch.to(args.device)
+        output = model(batch.x, batch.edge_index, batch.batch)
+        num_correct += (output.argmax(dim=1) == batch.y).sum().item()
+        num_samples += len(batch.y)
+    torch.cuda.empty_cache()
+    return num_correct / num_samples
 
 def xgb_train(train_data, train_label, test_data, 
               params={'max_depth': 5, 'eta': 0.1, 'objective': 'binary:logistic'}, num_round=1000):
