@@ -18,11 +18,11 @@ def seed_torch(seed):
     torch.backends.cudnn.deterministic = True
 
 def read_dataset(dataset_name):
-    data = np.load('/data/chenzy/ucr/%s.npz' % dataset_name)
+    try:
+        data = np.load('./ucr_dataset/%s.npz' % dataset_name)
+    except FileNotFoundError:
+        raise FileNotFoundError('Dataset %s not found.' % dataset_name)
     return (data[file] for file in data.files)
-
-def matrix2index(matrix):
-    return matrix.nonzero().T
 
 class GraphDataset(Dataset):
     def __init__(self, node_features, edge_matrices, labels, args):
@@ -32,7 +32,7 @@ class GraphDataset(Dataset):
         self.data = []
         for node_feature, edge_matrix, label in zip(node_features, edge_matrices, labels):
             self.data.append(Data(x=node_feature.float(), 
-                                  edge_index=matrix2index(edge_matrix), 
+                                  edge_index=edge_matrix.nonzero().T, 
                                   y=label, num_nodes=node_feature.shape[0]))
     def __len__(self):
         return len(self.data)

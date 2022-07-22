@@ -19,7 +19,9 @@ def extract_shapelets(series_set, len_shapelet, args):
         model.fit(cands)
         cands = model.encode(cands)
     dist, classes = kmeans(torch.from_numpy(cands), args)
-    dist = dist.numpy().min(axis=1)
+    dist = dist.to('cpu').numpy().min(axis=1)
+    classes = classes.to('cpu').numpy()
+    if args.device == 'cuda': torch.cuda.empty_cache()
     shapelets = []
     for i in range(args.num_shapelets):
         shapelets.append(cands[classes == i][np.argmin(dist[classes == i])])

@@ -1,16 +1,16 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GATConv, global_mean_pool
+from torch_geometric.nn import GATv2Conv, global_mean_pool
 import xgboost as xgb
 
 class GAT(nn.Module):
     def __init__(self, output_dim, args):
         super(GAT, self).__init__()
         self.layers = nn.ModuleList(
-            [GATConv(args.num_segments,            args.hidden_dim, heads=args.heads)] +
-            [GATConv(args.hidden_dim * args.heads, args.hidden_dim, heads=args.heads)] * (args.num_layers - 2) +
-            [GATConv(args.hidden_dim * args.heads, output_dim, heads=1, concat=False)])
+            [GATv2Conv(args.num_segments,            args.hidden_dim, heads=args.heads)] +
+            [GATv2Conv(args.hidden_dim * args.heads, args.hidden_dim, heads=args.heads)] * (args.num_layers - 2) +
+            [GATv2Conv(args.hidden_dim * args.heads, output_dim, heads=1, concat=False)])
         self.neg_slope = args.neg_slope
         self.dropout = args.dropout
     def forward(self, x, edge_index, batch):
@@ -77,7 +77,9 @@ class NeuralNetwork(nn.Module):
             raise NotImplementedError
         else:
             self.gat = GAT(args.embed_dim, args)
-            if args.tail == 'mlp':
+            if args.tail == 'linear':
+                self.tail = nn.Linear(args.embed_dim, args.num_classes)
+            elif args.tail == 'mlp':
                 self.tail = MultilayerPerceptron(args.embed_dim, args.num_classes)
             elif args.tail == 'resnet':
                 self.tail = FCResidualNetwork(args.embed_dim, args.num_classes)
