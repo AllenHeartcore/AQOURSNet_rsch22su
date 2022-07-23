@@ -10,11 +10,11 @@ Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22
 
 <br>
 
-<font color=#00A1E9>**A**</font>utoencoded <br> 
-<font color=#00A1E9>**Q**</font>uantification <br> 
-<font color=#00A1E9>**O**</font>f <br> 
-<font color=#00A1E9>**U**</font>nsupervised <br> 
-<font color=#00A1E9>**R**</font>epresentative <br> 
+<font color=#00A1E9>**A**</font>utoencoded <br>
+<font color=#00A1E9>**Q**</font>uantification <br>
+<font color=#00A1E9>**O**</font>f <br>
+<font color=#00A1E9>**U**</font>nsupervised <br>
+<font color=#00A1E9>**R**</font>epresentative <br>
 <font color=#00A1E9>**S**</font>hapelets <br>
 
 <br>
@@ -23,28 +23,34 @@ Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22
 
 ## Running the Program
     $ pip install -r Requirements.txt
-    $ python main.py [-h] \
-                     [--seed                SEED] \                  # Data
-                     [--dataset             DATASET] \
-                     [--device              DEVICE] \
-                     [--num-shapelets       NUM_SHAPELETS] \         # Shapelets
-                     [--num-segments        NUM_SEGMENTS] \
-                     [--pruning-percentile  PRUNING_PERCENTILE] \
-                     [--hidden-dim          HIDDEN_DIM] \            # GAT
-                     [--embed-dim           EMBED_DIM] \
-                     [--num-layers          NUM_LAYERS] \
-                     [--heads               HEADS] \
-                     [--neg-slope           NEG_SLOPE] \
-                     [--dropout             DROPOUT] \
-                     [--tail                TAIL] \
-                     [--epochs              EPOCHS] \                # Training
-                     [--batch-size          BATCH_SIZE]
-                     [--lr                  LR] \
-                     [--weight-decay        WEIGHT_DECAY] \
-                     [--ts2vec] \                                    # Enhancements
-                     [--dtw]
+    $ python main.py [DATASET] --argument ARGUMENT
 
-- ***WARNING:** The condensed `ts2vec.py` has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
+Possible arguments are described below. 
+
+<table>
+    <tr> <td> <b>Category</b> </td> <td> <b>Argument</b> </td> <td> <b>Description</b> </td> <td> <b>Default</b> </td> </tr>
+    <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>Dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
+    <tr> <td> <code>--seed</code> </td> <td> Random seed </td> <td> 42 </td> </tr>
+    <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu<code> </td> </tr>
+    <tr> <td rowspan="3"> <b>Shapelets</b> </td> <td> <code>--num-shapelets</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
+    <tr> <td> <code>--num-segments</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
+    <tr> <td> <code>--pruning-percentile</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="7"> <b>GAT</b> </td> <td> <code>--hidden-dim</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
+    <tr> <td> <code>--embed-dim</code> </td> <td> Embedding dimension of graph<br>(output dimension of GAT) </td> <td> 64 </td> </tr>
+    <tr> <td> <code>--num-layers</code> </td> <td> Number of layers </td> <td> 4 </td> </tr>
+    <tr> <td> <code>--heads</code> </td> <td> Number of attention heads </td> <td> 8 </td> </tr>
+    <tr> <td> <code>--neg-slope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
+    <tr> <td> <code>--dropout</code> </td> <td> Dropout rate </td> <td> 0.5 </td> </tr>
+    <tr> <td> <code>--tail</code> </td> <td> Type of prediction tail<br>(One of <code>none</code>, <code>linear</code>, <code>mlp</code>, <code>resnet</code>) </td> <td> <code>linear</code> </td> </tr>
+    <tr> <td rowspan="4"> <b>Training</b> </td> <td> <code>--epochs</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
+    <tr> <td> <code>--num-batches</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
+    <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
+    <tr> <td> <code>--weight-decay</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
+    <tr> <td rowspan="2"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using TS2VEC* </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--dtw</code> </td> <td> Switch for using DTW </td> <td> <code>False</code> </td> </tr>
+</table>
+
+****WARNING:** The condensed `ts2vec.py` (`--ts2vec` option) has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
 
 ## Model Pipeline
 0. Data preparation
@@ -93,4 +99,4 @@ Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22
 - MLP & ResNet (prediction tail) structures inspired by [Wang et al., 2017](https://ieeexplore.ieee.org/document/7966039)
 - Data from [the 
 UCR Time Series Classification Archive](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/), as documented in [Dau et al., 2018](https://arxiv.org/abs/1810.07758)
-- Python modules: [`torch`](https://pytorch.org/docs/stable/index.html), [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/), [`kmeans`](https://pypi.org/project/kmeans-pytorch/), [`dtw`](https://dynamictimewarping.github.io/python/), [`xgboost`](https://xgboost.readthedocs.io/en/stable/python/index.html), [`sklearn`](https://scikit-learn.org/stable/user_guide.html)
+- Python modules: [`torch`](https://pytorch.org/docs/stable/index.html), [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/), [`kmeans`](https://pypi.org/project/kmeans-pytorch/), [`dtw`](https://dynamictimewarping.github.io/python/), [`xgboost`](https://xgboost.readthedocs.io/en/stable/python/index.html)
