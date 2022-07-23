@@ -7,32 +7,32 @@
 | Time series | $s$ | $l$ | $n$ | $i$ |
 | Subsequences | $t$ | $m$ | $(l-m+1)$ | $p$ |
 | Shapelets | $v$ | $m$ | $k$ | $j$ |
-| Categories | $\textbf{y}_i$ | - | $N_\textrm{cat}$ | $c$ |
+| Categories | $\textbf{y} _ i$ | - | $N _ \textrm{cat}$ | $c$ |
 
 ## SOINN: [Yang, 2016](https://doi.org/10.1109/ICTAI.2016.0071)
 - Learning candidates: **SOINN** (online unsupervised) learns the topological structure & reports clusters
-- Data transformation: $\textrm{similarity} = e^{-\alpha \frac{\textrm{sdist}(t, v)}{T_P}}$, $T_P$ is a threshold learned by SOINN (denser data, small $T_P$)
-- Shapelets selection: learn a *sparse* weight matrix with **SVM** (L1-reg): $\textrm{loss} = C\sum_i \max(0, 1-y_i w^T x_i)^2 + \sum_j |w_j|$
+- Data transformation: $\textrm{similarity} = e^{-\alpha \frac{\textrm{sdist}(t, v)}{T _ P}}$, $T _ P$ is a threshold learned by SOINN (denser data, small $T _ P$)
+- Shapelets selection: learn a *sparse* weight matrix with **SVM** (L1-reg): $\textrm{loss} = C\sum _ i \max(0, 1-y _ i w^T x _ i)^2 + \sum _ j |w _ j|$
     - Candidates with associated weights being all zeros are removed
 
 ## Triple shapelet network: [Ma, 2019](https://doi.org/10.1109/ICDM.2019.00155) -- **Categorial & dynamic, 3 scope levels**
 - Current issues: classification accuracy vs. distinguishing power of the minority class; fixed shapelets
 - "Triple": dataset-level (softmax outputs), category-level (binary auxiliary classifier), sample-level (shapelet generator)
-- **Dataset-level**: $k$ shapelets; use shapelet transform to generate feature $\textbf{h}_i^D$
-- **Category-level**: $k' = \lceil\frac{k}{N_\textrm{cat}}\rceil$ shapelets *per category*; the $j^\textrm{th}$ category has feature $\textbf{h}_{i, j}^C$ ($N_\textrm{cat}$ in total)
-- **Sample-level**: Convolve over concat. subseqs.: $v_j = \textbf{W}_j \ast \textbf{O} + b_j$ is the $j^\textrm{th}$ generated shapelet ($k$ in total), feature $\textbf{h}_i^S$
-    - $L$ is the length, $P$ is the number of subsequences; $\textbf{W}_j \in \Bbb{R}^{5 \times P}$, $\textbf{O} \in \Bbb{R}^{L \times P}$, $b_j \in \Bbb{R}$
-- **Classification loss**: pred. value $P = \textrm{softmax}(\textbf{W}^\textrm{out}\textrm{concat}(h_i^D, h_i^C, h_i^S))$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times 3k}$, $h_i^\ast \in \Bbb{R}^k$
-- **Auxiliary loss**: pred. value $P = \sigma(\textbf{w} \cdot \textbf{h})$; $\textbf{w} \in \Bbb{R}^{N_\textrm{cat} \times k'}$, $\textbf{h} \in \Bbb{R}^{k'}$ (no concat., otherwise deprecated to dataset-level)
-- Learnables: dataset-level, category-level shapelets; $\textbf{W}_j$, $b_j$ (sample-level conv.), $\textbf{W}^\textrm{out}$ (cls. loss), $\textbf{w}$ (aux. loss)
+- **Dataset-level**: $k$ shapelets; use shapelet transform to generate feature $\textbf{h} _ i^D$
+- **Category-level**: $k' = \lceil\frac{k}{N _ \textrm{cat}}\rceil$ shapelets *per category*; the $j^\textrm{th}$ category has feature $\textbf{h} _ {i, j}^C$ ($N _ \textrm{cat}$ in total)
+- **Sample-level**: Convolve over concat. subseqs.: $v _ j = \textbf{W} _ j \ast \textbf{O} + b _ j$ is the $j^\textrm{th}$ generated shapelet ($k$ in total), feature $\textbf{h} _ i^S$
+    - $L$ is the length, $P$ is the number of subsequences; $\textbf{W} _ j \in \Bbb{R}^{5 \times P}$, $\textbf{O} \in \Bbb{R}^{L \times P}$, $b _ j \in \Bbb{R}$
+- **Classification loss**: pred. value $P = \textrm{softmax}(\textbf{W}^\textrm{out}\textrm{concat}(h _ i^D, h _ i^C, h _ i^S))$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N _ \textrm{cat} \times 3k}$, $h _ i^\ast \in \Bbb{R}^k$
+- **Auxiliary loss**: pred. value $P = \sigma(\textbf{w} \cdot \textbf{h})$; $\textbf{w} \in \Bbb{R}^{N _ \textrm{cat} \times k'}$, $\textbf{h} \in \Bbb{R}^{k'}$ (no concat., otherwise deprecated to dataset-level)
+- Learnables: dataset-level, category-level shapelets; $\textbf{W} _ j$, $b _ j$ (sample-level conv.), $\textbf{W}^\textrm{out}$ (cls. loss), $\textbf{w}$ (aux. loss)
 
 ![19ma](img/19ma.png)
 
 ## Adversarial regulatization: [Wang, 2019](https://doi.org/10.48550/arXiv.1906.00917) -- **GAN, 3 optimization steps**
 - A discriminator is trained to distinguish between shapelets and subsequences
-- **Optimize classifier step**: Dot product (softmaxed distance vector, learn weight vector) -> pred value, optimize $\theta_c$
-- **Optimize discriminator step**: $\textrm{loss} = ||v_j||^2 - ||t_j||^2 + \lambda(||\partial(\epsilon t_j + (1-\epsilon) v_j)||^2 - 1)$ (***??????***), optimize $\theta_d$
-- **Optimize shapelet step**: $\textrm{loss} = -||v_j||^2$, optimize $\theta_s$ *(Note: $\theta_s$ are the shapelets themselves!)*
+- **Optimize classifier step**: Dot product (softmaxed distance vector, learn weight vector) -> pred value, optimize $\theta _ c$
+- **Optimize discriminator step**: $\textrm{loss} = ||v _ j||^2 - ||t _ j||^2 + \lambda(||\partial(\epsilon t _ j + (1-\epsilon) v _ j)||^2 - 1)$ (***??????***), optimize $\theta _ d$
+- **Optimize shapelet step**: $\textrm{loss} = -||v _ j||^2$, optimize $\theta _ s$ (Note: $\theta _ s$ are the shapelets themselves!)
 - Losses: classifier - multi-class cross entropy, discriminator - WGAN-GP, shapelet - normal length
 
 ![19wang](img/19wang.png)
@@ -40,29 +40,29 @@
 ## Adversarial dynamic shapelet network: [Ma, 2020](https://doi.org/10.1609/AAAI.v34i04.5948) -- **Global conv. kernels, 3 losses**
 - Current issues: shapelets deviate from the subsequences ("adversarial"); fixed shapelets ("dynamic")
 - **Shapelet generator**: same as ("Sample-level", TSN)
-- **Dynamic shapelet transformation**: $P = \textrm{softmax}(\textbf{W}^\textrm{out}h_i)$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times k}$, $h_i \in \Bbb{R}^k$ - *fully dynamic???*
+- **Dynamic shapelet transformation**: $P = \textrm{softmax}(\textbf{W}^\textrm{out}h _ i)$; $\textbf{W}^\textrm{out} \in \Bbb{R}^{N _ \textrm{cat} \times k}$, $h _ i \in \Bbb{R}^k$ - *fully dynamic???*
 - **Adversarial training strategy**: "two-player minimax game"; $D$ is a *two-layer conv-nn*
 - **Diversity Regularization Term**: $\textrm{similarity} = e^{-||\Delta d||}$
-- Losses: $L_\textrm{cls}$ - cross entropy, $L_\textrm{adv}$ - $-\frac{1}{nk}\sum_{i=1}^n\sum_{j=1}^k\log(\textrm{discriminator}(t_i, v_j))$, $L_\textrm{div}$ - Frobenius norm
+- Losses: $L _ \textrm{cls}$ - cross entropy, $L _ \textrm{adv}$ - $-\frac{1}{nk}\sum _ {i=1}^n\sum _ {j=1}^k\log(\textrm{discriminator}(t _ i, v _ j))$, $L _ \textrm{div}$ - Frobenius norm
 - ### Complete pseudo-code
-    - Hyperparameters: $n_E$ (num. epochs), $n_B$ (batch size), $k$, $m$, $\eta$ (learning rate), $\lambda_\textrm{Adv}$, $\lambda_\textrm{Div}$ (regularization params.)
-    - Learnables: $\textbf{W}_j$, $b_j$ (conv. kernels), $\textbf{W}_\textrm{out}$ (linear classification layer), $\theta_D$ (conv-nn), $\theta_\textrm{ADSN}$ (ensemble of params.)
-    - For $n_E$ epochs and $\lceil\frac{n}{n_B}\rceil$ batches
-        - For time series $i = 1 : n_B$
-            - Concatenate subsequences into matrix $\textbf{O}_i \in \Bbb{R}^{m \times (l-m+1)}$
+    - Hyperparameters: $n _ E$ (num. epochs), $n _ B$ (batch size), $k$, $m$, $\eta$ (learning rate), $\lambda _ \textrm{Adv}$, $\lambda _ \textrm{Div}$ (regularization params.)
+    - Learnables: $\textbf{W} _ j$, $b _ j$ (conv. kernels), $\textbf{W} _ \textrm{out}$ (linear classification layer), $\theta _ D$ (conv-nn), $\theta _ \textrm{ADSN}$ (ensemble of params.)
+    - For $n _ E$ epochs and $\lceil\frac{n}{n _ B}\rceil$ batches
+        - For time series $i = 1 : n _ B$
+            - Concatenate subsequences into matrix $\textbf{O} _ i \in \Bbb{R}^{m \times (l-m+1)}$
             - For "dynamic" shapelets $j = 1 : k$
-                - Compute shapelet $v_{i, j} = \textbf{W}_j \ast \textbf{O}_i + b_j$ ($\textbf{W}_j \in \Bbb{R}^{\textrm{width} \times (l-m+1)}$, $b_j \in \Bbb{R}$)
-                - Compute distance $h_{i, j} = \min_{p = 1 : (l-m+1)} |v_{i, j} - t_{i, p}|$
-            - Compute predicted category $\hat{\textbf{y}}_i = \textrm{Softmax}(\textbf{W}_\textrm{out} \textbf{h}_i)$ ($\textbf{W}_\textrm{out} \in \Bbb{R}^{N_\textrm{cat} \times k}$, $\textbf{h}_i \in \Bbb{R}^k$, $\hat{\textbf{y}}_i \in \Bbb{R}^{N_\textrm{cat}}$)
-            - Compute similarity matrix $\textbf{G}_i [j, j'] = e^{-|v_{i, j} - v_{i, j'}|}$ ($\textbf{G}_i \in \Bbb{R}^{k \times k}$; vectorization may apply)
+                - Compute shapelet $v _ {i, j} = \textbf{W} _ j \ast \textbf{O} _ i + b _ j$ ($\textbf{W} _ j \in \Bbb{R}^{\textrm{width} \times (l-m+1)}$, $b _ j \in \Bbb{R}$)
+                - Compute distance $h _ {i, j} = \min _ {p = 1 : (l-m+1)} |v _ {i, j} - t _ {i, p}|$
+            - Compute predicted category $\hat{\textbf{y}} _ i = \textrm{Softmax}(\textbf{W} _ \textrm{out} \textbf{h} _ i)$ ($\textbf{W} _ \textrm{out} \in \Bbb{R}^{N _ \textrm{cat} \times k}$, $\textbf{h} _ i \in \Bbb{R}^k$, $\hat{\textbf{y}} _ i \in \Bbb{R}^{N _ \textrm{cat}}$)
+            - Compute similarity matrix $\textbf{G} _ i [j, j'] = e^{-|v _ {i, j} - v _ {i, j'}|}$ ($\textbf{G} _ i \in \Bbb{R}^{k \times k}$; vectorization may apply)
         - For $\textrm{numIter}$ cycles of learning discriminator $D$
-            - Compute $L_D = -\sum_i \sum_p \log D(t_{i, p}) -\sum_i \sum_j \log D(1-v_{i, j})$ ($D(\cdot)$ - similarity to real subseqs.)
-            - SGD the parameters: $\theta_D = \theta_D - \eta \frac{\partial L_D}{\partial \theta_D}$
-        - Compute $\textrm{Loss}_\textrm{Classification} = -\frac{1}{n_B} \sum_i \sum_c \textbf{y}_{i, c} \hat{\textbf{y}}_{i, c}$ (maximize predicted value at correct category)
-        - Compute $\textrm{Loss}_\textrm{Adversarial} = -\frac{1}{n_B k} \sum_i \sum_j \log D(v_{i, j})$ (maximize shapelets' similarity to subseqs.)
-        - Compute $\textrm{Loss}_\textrm{Diversity} = ||\textrm{Concat} (\textbf{G}_1, \ldots, \textbf{G}_{n_B})||^2_F$ (minimize shapelets' similarity to each other)
-        - Compute $L_\textrm{ADSN} = \textrm{Loss}_\textrm{Cls} + \lambda_\textrm{Adv} \textrm{Loss}_\textrm{Adv} + \lambda_\textrm{Div} \textrm{Loss}_\textrm{Div}$
-        - SGD the parameters: $\theta_\textrm{ADSN} = \theta_\textrm{ADSN} - \eta \frac{\partial L_\textrm{ADSN}}{\partial \theta_\textrm{ADSN}}$
+            - Compute $L _ D = -\sum _ i \sum _ p \log D(t _ {i, p}) -\sum _ i \sum _ j \log D(1-v _ {i, j})$ ($D(\cdot)$ - similarity to real subseqs.)
+            - SGD the parameters: $\theta _ D = \theta _ D - \eta \frac{\partial L _ D}{\partial \theta _ D}$
+        - Compute $\textrm{Loss} _ \textrm{Classification} = -\frac{1}{n _ B} \sum _ i \sum _ c \textbf{y} _ {i, c} \hat{\textbf{y}} _ {i, c}$ (maximize predicted value at correct category)
+        - Compute $\textrm{Loss} _ \textrm{Adversarial} = -\frac{1}{n _ B k} \sum _ i \sum _ j \log D(v _ {i, j})$ (maximize shapelets' similarity to subseqs.)
+        - Compute $\textrm{Loss} _ \textrm{Diversity} = ||\textrm{Concat} (\textbf{G} _ 1, \ldots, \textbf{G} _ {n _ B})||^2 _ F$ (minimize shapelets' similarity to each other)
+        - Compute $L _ \textrm{ADSN} = \textrm{Loss} _ \textrm{Cls} + \lambda _ \textrm{Adv} \textrm{Loss} _ \textrm{Adv} + \lambda _ \textrm{Div} \textrm{Loss} _ \textrm{Div}$
+        - SGD the parameters: $\theta _ \textrm{ADSN} = \theta _ \textrm{ADSN} - \eta \frac{\partial L _ \textrm{ADSN}}{\partial \theta _ \textrm{ADSN}}$
 
 ![20ma](img/20ma.png)
 
@@ -76,14 +76,14 @@
     - *Dilated*: blanks in the hidden layers, achieves exponentially large receptive field
     - *Causal*: no future value <==> no connections with "negative slope" (fig. bottom right)
 - ***Unsupervised* representation training**: *cluster-wise triplet loss* considers the distance between (anchor, Ps, Ns)
-    - "Single positive" is unstable; CWT minimizes $\mathcal{D}_{AP}$, $\mathcal{D}_{PP}$, $\mathcal{D}_{NN}$, maximizes $\mathcal{D}_{AN}$
-    - $\mathcal{D}_{AP} = \frac{1}{||\textbf{x}^+||} \sum_i ||f(x)-f(x_i^+)||^2$, $\mathcal{D}_{AN} = \frac{1}{||\textbf{x}^-||} \sum_i ||f(x)-f(x_i^-)||^2$ - $f(\cdot)$ is Mdc-CNN ^
-    - $\mathcal{D}_{PP} = \max_{1 \le i, j \le ||\textbf{x}^+||} ||f(x_i^+)-f(x_j^+)||^2$, $\mathcal{D}_{PP} = \max_{1 \le i, j \le ||\textbf{x}^-||} ||f(x_i^-)-f(x_j^-)||^2$
-    - $L_\textrm{CWT} = \log \frac{\mathcal{D}_{AP}+\mu}{\mathcal{D}_{AN}} + \lambda (\mathcal{D}_{PP}+\mathcal{D}_{NN})$ - $\mu$ is the "enforced P-N margin"; $\lambda$ is hyperparam.
+    - "Single positive" is unstable; CWT minimizes $\mathcal{D} _ {AP}$, $\mathcal{D} _ {PP}$, $\mathcal{D} _ {NN}$, maximizes $\mathcal{D} _ {AN}$
+    - $\mathcal{D} _ {AP} = \frac{1}{||\textbf{x}^+||} \sum _ i ||f(x)-f(x _ i^+)||^2$, $\mathcal{D} _ {AN} = \frac{1}{||\textbf{x}^-||} \sum _ i ||f(x)-f(x _ i^-)||^2$ - $f(\cdot)$ is Mdc-CNN ^
+    - $\mathcal{D} _ {PP} = \max _ {1 \le i, j \le ||\textbf{x}^+||} ||f(x _ i^+)-f(x _ j^+)||^2$, $\mathcal{D} _ {PP} = \max _ {1 \le i, j \le ||\textbf{x}^-||} ||f(x _ i^-)-f(x _ j^-)||^2$
+    - $L _ \textrm{CWT} = \log \frac{\mathcal{D} _ {AP}+\mu}{\mathcal{D} _ {AN}} + \lambda (\mathcal{D} _ {PP}+\mathcal{D} _ {NN})$ - $\mu$ is the "enforced P-N margin"; $\lambda$ is hyperparam.
     - *Note: how can we call this approach "unsupervised" if we can tell the positive samples from the negative ones?*
 - **Multivar shapelet transform**: Compute *representative and diversified* final shapelets rather than using all embeddings
     - Final shapelets should be (1) *close* to the centroid of a *large* cluster and (2) *far* from other clusters - select top-$k$
-        - $\mathcal{U}(f(x_i)) = \beta \frac{\log \textrm{ClusterSize}(f(x_i))}{\log \max_i \textrm{ClusterSize}(f(x_i))} + (1-\beta) \frac{\log \sum_j ||f(x_i)-f(x_j)||^2}{\log \max_i \sum_j ||f(x_i)-f(x_j)||^2}$ - $1 \le i, j \le \textrm{NumClusters}$
+        - $\mathcal{U}(f(x _ i)) = \beta \frac{\log \textrm{ClusterSize}(f(x _ i))}{\log \max _ i \textrm{ClusterSize}(f(x _ i))} + (1-\beta) \frac{\log \sum _ j ||f(x _ i)-f(x _ j)||^2}{\log \max _ i \sum _ j ||f(x _ i)-f(x _ j)||^2}$ - $1 \le i, j \le \textrm{NumClusters}$
         - This avoids a large fraction of computing non-discriminative shapelet candidates
         - Finally, adopt a classical classifier (e.g., SVM)
 
@@ -94,12 +94,12 @@
     - Distance layer: Shapelets *themselves* are the weights! 
     - Initialize $\textbf{S}$ using KMeans on each channel
 - **Learning objective**: three components:
-    - $\textrm{Loss}_\textrm{Classification} = -\sum_i y_i \log \hat{y}_i$
-    - $\textrm{Loss}_\textrm{Redundancy} = \sum_j \frac{\sigma(G_j)}{k}$, $\sigma(G_j) = \frac{1}{1+e^{-\theta G_j}}$ - $\textbf{G} \in \Bbb{R}^k$ (gating params.), $\theta$ $\gg 1$
+    - $\textrm{Loss} _ \textrm{Classification} = -\sum _ i y _ i \log \hat{y} _ i$
+    - $\textrm{Loss} _ \textrm{Redundancy} = \sum _ j \frac{\sigma(G _ j)}{k}$, $\sigma(G _ j) = \frac{1}{1+e^{-\theta G _ j}}$ - $\textbf{G} \in \Bbb{R}^k$ (gating params.), $\theta$ $\gg 1$
         - Suppress **redundant** shapelets: sigmoid forces $\textbf{G}$ to be *binary*
-    - $\textrm{Loss}_\textrm{Correlation} = \max_{i, j} |\textrm{CorrMat}(\textbf{M} \cdot \textrm{diag}(\sigma(G_j)))_{ij}|$, $M_{ij} = \textrm{dist}(s_i, v_j)$
+    - $\textrm{Loss} _ \textrm{Correlation} = \max _ {i, j} |\textrm{CorrMat}(\textbf{M} \cdot \textrm{diag}(\sigma(G _ j))) _ {ij}|$, $M _ {ij} = \textrm{dist}(s _ i, v _ j)$
         - Suppress **similar** shapelets: now $\textbf{G}$ is part of the differentiable computing graph! 
-    - $L_\textrm{MLNN} = (1-\alpha) \textrm{Loss}_\textrm{Cls} + \alpha (\textrm{Loss}_\textrm{Rdn} + \textrm{Loss}_\textrm{Corr})$, $\alpha \in [0, \frac{1}{2}]$ (cosine cyclic scheduling: H - discard, L - refine)
+    - $L _ \textrm{MLNN} = (1-\alpha) \textrm{Loss} _ \textrm{Cls} + \alpha (\textrm{Loss} _ \textrm{Rdn} + \textrm{Loss} _ \textrm{Corr})$, $\alpha \in [0, \frac{1}{2}]$ (cosine cyclic scheduling: H - discard, L - refine)
         - Learnables: weights $\textbf{W}$ (Linear & Softmax, cls), shapelets $\textbf{S}$ & gatings $\textbf{G}$ (Distance, rdn & corr)
         - This objective selects *smaller* sets of *uncorrelated* shapelets (no selection of hyperparams. like $k$ and $m$)
 
@@ -110,7 +110,7 @@
     - Capturing (non-)**periodic** patterns
     - Being **invarient** to time scaling
     - Being **simple** enough for model combination
-- $\textrm{Time2Vec}(t)[i] = \mathcal{F}(\omega_i t + \tau_i)$ - $\mathcal{F}$ is periodic activation, $\omega_i$ & $\tau_i$ are learnable params.
+- $\textrm{Time2Vec}(t)[i] = \mathcal{F}(\omega _ i t + \tau _ i)$ - $\mathcal{F}$ is periodic activation, $\omega _ i$ & $\tau _ i$ are learnable params.
 
 <br>
 
@@ -156,11 +156,11 @@
 - **Unsupervised step**: *contrastively* train an embedding network $\mathcal{U}$ to extract $t$'s features
 - Supervised labelling: feed $t$ and $v$ into $\mathcal{U}$, use the E.D. of *output vectors* as the "distance" labels
 - **Supervised step**: concatenate an MLP $\mathcal{S}$ after the unsupervised model, use the labels ^ for fine-tuning
-- The model is then ready. For each $s$, transfer its $t$s into possibility vectors and contruct the FSM Diagram
+- The model is then ready. For each $s$, transfer its $t$ into possibility vectors and contruct the FSM Diagram
 
 ## More on picking shapelet candidates
 - Randomly pick among the segments
-- **KMeans** algorithm: classify $t$s into clusters, choose the center of each
+- **KMeans** algorithm: classify $t$ into clusters, choose the center of each
     - Clustering encourages **representative** shapelets, but **diversity** requires more thoughts
     - A mature algrm. for speeding up (in $O(n)$ time)
     - [ShapeNet](https://ojs.aaai.org/index.php/AAAI/article/view/17018) shows the plausibility of selection via clustering
