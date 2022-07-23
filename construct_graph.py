@@ -4,7 +4,6 @@ from ts2vec import TS2Vec
 from kmeans import kmeans
 from dtw import dtw
 from tqdm import tqdm
-from sklearn.preprocessing import minmax_scale
 
 # series: amount n, length l
 # shapelets: amount k, length m
@@ -43,6 +42,9 @@ def embed_series(series_set, shapelets, args):
         for j, shapelet in enumerate(shapelets):
             embedding[i, j] = segmented_distance(series, shapelet, args)
     return embedding
+
+def minmax_scale(arr):
+    return (arr - arr.min()) / (arr.max() - arr.min())
 
 def adjacency_matrix(embedding, args):
     print("[Constructing AdjMat]: ", end='')
