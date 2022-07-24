@@ -29,24 +29,27 @@ Possible arguments are described below.
 
 <table>
     <tr> <td> <b>Category</b> </td> <td> <b>Argument</b> </td> <td> <b>Description</b> </td> <td> <b>Default</b> </td> </tr>
-    <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>Dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
+    <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
     <tr> <td> <code>--seed</code> </td> <td> Random seed </td> <td> 42 </td> </tr>
-    <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu<code> </td> </tr>
-    <tr> <td rowspan="3"> <b>Shapelets</b> </td> <td> <code>--num-shapelets</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
-    <tr> <td> <code>--num-segments</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
-    <tr> <td> <code>--pruning-percentile</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
-    <tr> <td rowspan="7"> <b>GAT</b> </td> <td> <code>--hidden-dim</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
-    <tr> <td> <code>--embed-dim</code> </td> <td> Embedding dimension of graph<br>(output dimension of GAT) </td> <td> 64 </td> </tr>
-    <tr> <td> <code>--num-layers</code> </td> <td> Number of layers </td> <td> 4 </td> </tr>
-    <tr> <td> <code>--heads</code> </td> <td> Number of attention heads </td> <td> 8 </td> </tr>
-    <tr> <td> <code>--neg-slope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
+    <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu</code> </td> </tr>
+    <tr> <td rowspan="5"> <b>Shapelets</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
+    <tr> <td> <code>--nsegment</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
+    <tr> <td> <code>--maxiter</code> </td> <td> Max number of iterations of KMeans </td> <td> 300 </td> </tr>
+    <tr> <td> <code>--tol</code> </td> <td> Tolerance of KMeans </td> <td> 0.0001 </td> </tr>
+    <tr> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="7"> <b>GAT</b> </td> <td> <code>--dhidden</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
+    <tr> <td> <code>--dembed</code> </td> <td> Embedding dimension of graph<br>(output dimension of GAT) </td> <td> 64 </td> </tr>
+    <tr> <td> <code>--nlayer</code> </td> <td> Number of layers </td> <td> 4 </td> </tr>
+    <tr> <td> <code>--nhead</code> </td> <td> Number of attention heads </td> <td> 8 </td> </tr>
+    <tr> <td> <code>--negslope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
     <tr> <td> <code>--dropout</code> </td> <td> Dropout rate </td> <td> 0.5 </td> </tr>
     <tr> <td> <code>--tail</code> </td> <td> Type of prediction tail<br>(One of <code>none</code>, <code>linear</code>, <code>mlp</code>, <code>resnet</code>) </td> <td> <code>linear</code> </td> </tr>
-    <tr> <td rowspan="4"> <b>Training</b> </td> <td> <code>--epochs</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
-    <tr> <td> <code>--num-batches</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
+    <tr> <td rowspan="5"> <b>Training</b> </td> <td> <code>--nproc</code> </td> <td> Number of processes per GPU<br>if device is <code>cuda</code> </td> <td> 1 </td> </tr>
+    <tr> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
+    <tr> <td> <code>--nbatch</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
     <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
-    <tr> <td> <code>--weight-decay</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
-    <tr> <td rowspan="2"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using TS2VEC* </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--wd</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
+    <tr> <td rowspan="2"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using <i>TS2VEC*</i> </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--dtw</code> </td> <td> Switch for using DTW </td> <td> <code>False</code> </td> </tr>
 </table>
 
@@ -54,11 +57,33 @@ Possible arguments are described below.
 
 ## Model Pipeline
 0. Data preparation
+    - `read_dataset`
 1. Time series ---extract---> Shapelets
+    - `extract_shapelets` (Wrapper)
+    - `kmeans`
+    - `TS2VEC` (Enhancement)
 2. Time series & shapelets ---embed---> Series embedding
+    - `embed_series`
+    - `dtw` (Enhancement)
 3. Series embedding ---construct---> Graph
+    - `adjacency_matrix`
 4. Graph ---embed---> Graph embedding
+    - `graph_dataloader` (Wrapper)
+    - `NeuralNetwork`
+    - `GAT`
 5. Graph embedding ---predict---> Predicted classes
+    - `MultilayerPerceptron`
+    - `FCResidualNetwork`
+
+## Call Hierarchy
+- `main.py`
+    - `utils.py` (#0, #4 wrapper)
+    - `construct_graph.py` (#1 wrapper, #2, #3)
+        - `ts2vec.py` (#1 enhancement)
+        - `kmeans.py` (#1)
+        - `dtw` (#2 enhancement)
+    - `network.py` (#4, #5)
+        - `xgboost` (**TO BE IMPLEMENTED**)
 
 ## Folder Structure
 - `Stanford_CS224w` - a prerequisite [course](http://web.stanford.edu/class/cs224w/)
@@ -76,16 +101,6 @@ Possible arguments are described below.
     - `*_data` has shape `(num_samples, num_features)`, `*_label` has shape `(num_samples,)`
 - `presentation` - presentation materials including slides and diagrams
 
-## Call Hierarchy
-- `main.py`
-    - `utils.py` (#0: `ucr_dataset`, #3 wrapper: `GraphDataset`)
-    - `construct_graph.py` (#1 wrapper: `extract_shapelets`, #2: `embed_series`, #3: `adjacency_matrix`)
-        - `ts2vec.py` (#1 optional enhancement: `TS2Vec`)
-        - `kmeans.py` (#1: `kmeans`)
-        - `dtw` (#2 optional enhancement: `dtw`)
-    - `network.py` (#4: `GAT`, #5: `MultilayerPerceptron` & `FCResidualNetwork`)
-        - `xgboost` (**TO BE IMPLEMENTED**)
-
 ## Credits
 - Original Time2Graph model by [Cheng et al., 2020](https://ojs.aaai.org/index.php/AAAI/article/view/5769) & [Cheng et al., 2021](https://ieeexplore.ieee.org/document/9477138), code inspired by [petecheng@GitHub](https://github.com/petecheng/Time2GraphPlus)
 - Time2Vec algorithm (essence of AQOURS) by [Kazemi et al., 2019](https://arxiv.org/abs/1907.05321), code adapted from [yuezhihan@GitHub](https://github.com/yuezhihan/ts2vec)
@@ -100,3 +115,6 @@ Possible arguments are described below.
 - Data from [the 
 UCR Time Series Classification Archive](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/), as documented in [Dau et al., 2018](https://arxiv.org/abs/1810.07758)
 - Python modules: [`torch`](https://pytorch.org/docs/stable/index.html), [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/), [`kmeans`](https://pypi.org/project/kmeans-pytorch/), [`dtw`](https://dynamictimewarping.github.io/python/), [`xgboost`](https://xgboost.readthedocs.io/en/stable/python/index.html)
+
+## Easter Egg
+Some of you may wonder where the name "[AQOURS](https://lovelive-anime.jp/uranohoshi/)Net" actually comes from……

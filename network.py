@@ -8,10 +8,10 @@ class GAT(nn.Module):
     def __init__(self, output_dim, args):
         super(GAT, self).__init__()
         self.layers = nn.ModuleList(
-            [GATv2Conv(args.num_segments,            args.hidden_dim, heads=args.heads)] +
-            [GATv2Conv(args.hidden_dim * args.heads, args.hidden_dim, heads=args.heads)] * (args.num_layers - 2) +
-            [GATv2Conv(args.hidden_dim * args.heads, output_dim, heads=1, concat=False)])
-        self.neg_slope = args.neg_slope
+            [GATv2Conv(args.nsegment,               args.dhidden, heads=args.nhead)] +
+            [GATv2Conv(args.dhidden * args.nhead, args.dhidden, heads=args.nhead)] * (args.nlayer - 2) +
+            [GATv2Conv(args.dhidden * args.nhead, output_dim, heads=1, concat=False)])
+        self.neg_slope = args.negslope
         self.dropout = args.dropout
     def forward(self, x, edge_index, batch):
         for layer in self.layers:
@@ -71,18 +71,18 @@ class NeuralNetwork(nn.Module):
     def __init__(self, args):
         super(NeuralNetwork, self).__init__()
         if args.tail == 'none':
-            self.gat = GAT(args.num_classes, args)
+            self.gat = GAT(args.nclass, args)
             self.tail = None
         if args.tail == 'xgboost':
             raise NotImplementedError
         else:
-            self.gat = GAT(args.embed_dim, args)
+            self.gat = GAT(args.dembed, args)
             if args.tail == 'linear':
-                self.tail = nn.Linear(args.embed_dim, args.num_classes)
+                self.tail = nn.Linear(args.dembed, args.nclass)
             elif args.tail == 'mlp':
-                self.tail = MultilayerPerceptron(args.embed_dim, args.num_classes)
+                self.tail = MultilayerPerceptron(args.dembed, args.nclass)
             elif args.tail == 'resnet':
-                self.tail = FCResidualNetwork(args.embed_dim, args.num_classes)
+                self.tail = FCResidualNetwork(args.dembed, args.nclass)
             else:
                 raise NotImplementedError
     def forward(self, x, edge_index, batch):
@@ -95,9 +95,9 @@ def train(model, loader, loss_func, optimizer, args):
     total_loss, num_correct, num_samples = 0., 0, 0
     for batch in loader:
         batch = batch.to(args.device)
+        optimizer.zero_grad()
         output = model(batch.x, batch.edge_index, batch.batch)
         loss = loss_func(output, batch.y)
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         total_loss += loss.item()

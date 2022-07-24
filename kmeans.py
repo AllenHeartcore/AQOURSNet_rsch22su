@@ -2,27 +2,24 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-max_iter = 300
-tol = 1e-4
-
 def initialize(X, num_clusters):
     num_samples = len(X)
     indices = np.random.choice(num_samples, num_clusters, replace=False)
     initial_state = X[indices]
     return initial_state
 
-def kmeans(X, kwargs):
+def kmeans(X, args):
     X = X.float()
-    X = X.to(kwargs.device)
-    initial_state = initialize(X, kwargs.num_shapelets)
+    X = X.to(args.device)
+    initial_state = initialize(X, args.nshapelet)
     iteration = 0
     tqdm_meter = tqdm(desc='[Running KMeans]')
-    while iteration < max_iter:
-        dis = pairwise_distance(X, initial_state, kwargs.device)
+    while iteration < args.maxiter:
+        dis = pairwise_distance(X, initial_state, args.device)
         choice_cluster = torch.argmin(dis, dim=1)
         initial_state_pre = initial_state.clone()
-        for index in range(kwargs.num_shapelets):
-            selected = torch.nonzero(choice_cluster == index).squeeze().to(kwargs.device)
+        for index in range(args.nshapelet):
+            selected = torch.nonzero(choice_cluster == index).squeeze().to(args.device)
             selected = torch.index_select(X, 0, selected)
             initial_state[index] = selected.mean(dim=0)
         center_shift = torch.sum(torch.sqrt(torch.sum( \
@@ -31,10 +28,10 @@ def kmeans(X, kwargs):
         tqdm_meter.set_postfix(
             iteration=f'{iteration}',
             center_shift=f'{center_shift ** 2:0.6f}',
-            tol=f'{tol:0.6f}'
+            tol=f'{args.tol:0.6f}'
         )
         tqdm_meter.update()
-        if center_shift ** 2 < tol:
+        if center_shift ** 2 < args.tol:
             break
     return dis.cpu(), choice_cluster.cpu()
 

@@ -22,14 +22,14 @@ def extract_shapelets(series_set, len_shapelet, args):
     classes = classes.to('cpu').numpy()
     if args.device == 'cuda': torch.cuda.empty_cache()
     shapelets = []
-    for i in range(args.num_shapelets):
+    for i in range(args.nshapelet):
         shapelets.append(cands[classes == i][np.argmin(dist[classes == i])])
     return np.stack(shapelets) # shape = (k, m)
 
 def segmented_distance(series, shapelet, args):
     (l,), (m,) = series.shape, shapelet.shape
     if l % m != 0: series = series[:-(l % m)]
-    segments = series.reshape(-1, m)[:args.num_segments] # shape = (l / m, m)
+    segments = series.reshape(-1, m)[:args.nsegment] # shape = (l / m, m)
     if args.dtw:
         return np.array([dtw(shapelet, segment).distance for segment in segments])
     else:
@@ -37,7 +37,7 @@ def segmented_distance(series, shapelet, args):
 
 def embed_series(series_set, shapelets, args):
     (n, _), (k, _) = series_set.shape, shapelets.shape
-    embedding = np.zeros((n, k, args.num_segments))
+    embedding = np.zeros((n, k, args.nsegment))
     for i, series in tqdm(enumerate(series_set), desc='[Embedding Series]'):
         for j, shapelet in enumerate(shapelets):
             embedding[i, j] = segmented_distance(series, shapelet, args)
@@ -57,6 +57,6 @@ def adjacency_matrix(embedding, args):
             dst_dist = 1. - minmax_scale(embedding[ser_idx, seg_idx + 1])
             for src in range(k):
                 adj_mat[ser_idx, src] += (src_dist[src] * dst_dist)
-    threshold = np.percentile(adj_mat, args.pruning_percentile)
+    threshold = np.percentile(adj_mat, args.percent)
     print("threshold = %f" % threshold)
     return (adj_mat > threshold).astype(np.uint8)
