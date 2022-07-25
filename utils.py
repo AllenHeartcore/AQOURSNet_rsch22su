@@ -25,7 +25,7 @@ def read_dataset(dataset_name):
     return (data[file] for file in data.files)
 
 class GraphDataset(Dataset):
-    def __init__(self, node_features, edge_matrices, labels, args):
+    def __init__(self, node_features, edge_matrices, labels):
         super(GraphDataset, self).__init__()
         node_features, edge_matrices, labels = map(lambda x: torch.tensor(x), 
                                                    (node_features, edge_matrices, labels))
@@ -40,6 +40,6 @@ class GraphDataset(Dataset):
         return self.data[idx]
 
 def graph_dataloader(node_features, edge_matrices, labels, args):
-    dataset = GraphDataset(node_features, edge_matrices, labels, args)
-    return DataLoader(dataset, batch_size=args.batch_size, 
+    dataset = GraphDataset(node_features, edge_matrices, labels)
+    return DataLoader(dataset, batch_size=args.batchsize, 
                       shuffle=True, num_workers=torch.cuda.device_count())

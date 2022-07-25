@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from ts2vec import TS2Vec
-from kmeans import kmeans
 from dtw import dtw
 from tqdm import tqdm
+from kmeans import kmeans
+from ts2vec import TS2Vec
 
 # series: amount n, length l
 # shapelets: amount k, length m
@@ -14,7 +14,10 @@ def extract_shapelets(series_set, len_shapelet, args):
                             for i in range(l - len_shapelet + 1)])
     if args.ts2vec:
         if cands.ndim == 2: cands = np.expand_dims(cands, axis=2)
-        model = TS2Vec(cands.shape[2], args.device)
+        model = TS2Vec(cands.shape[2], args.device, 
+                        hidden_dims=args.ts2vec_dhidden, 
+                        output_dims=args.ts2vec_dembed, 
+                        depth=args.ts2vec_nlayer)
         model.fit(cands)
         cands = model.encode(cands)
     dist, classes = kmeans(torch.from_numpy(cands), args)
@@ -31,7 +34,11 @@ def segmented_distance(series, shapelet, args):
     if l % m != 0: series = series[:-(l % m)]
     segments = series.reshape(-1, m)[:args.nsegment] # shape = (l / m, m)
     if args.dtw:
-        return np.array([dtw(shapelet, segment).distance for segment in segments])
+        return np.array([dtw(shapelet, segment, 
+                            distance_only=True, 
+                            dist_method=args.dtw_dist, 
+                            step_pattern=args.dtw_step, 
+                            window_type=args.dtw_window).distance for segment in segments])
     else:
         return np.linalg.norm(segments - shapelet, axis=1) # shape = (l / m,)
 

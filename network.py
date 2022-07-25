@@ -1,8 +1,6 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv, global_mean_pool
-import xgboost as xgb
 
 class GAT(nn.Module):
     def __init__(self, output_dim, args):
@@ -89,39 +87,11 @@ class NeuralNetwork(nn.Module):
         x = self.gat(x, edge_index, batch)
         if self.tail is not None: x = self.tail(x)
         return x
-
-def train(model, loader, loss_func, optimizer, args):
-    model.train()
-    total_loss, num_correct, num_samples = 0., 0, 0
-    for batch in loader:
-        batch = batch.to(args.device)
-        optimizer.zero_grad()
-        output = model(batch.x, batch.edge_index, batch.batch)
-        loss = loss_func(output, batch.y)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-        num_correct += (output.argmax(dim=1) == batch.y).sum().item()
-        num_samples += len(batch.y)
-    torch.cuda.empty_cache()
-    return total_loss / num_samples, num_correct / num_samples
-
-@torch.no_grad()
-def test(model, loader, args):
-    model.eval()
-    num_correct, num_samples = 0, 0
-    for batch in loader:
-        batch = batch.to(args.device)
-        output = model(batch.x, batch.edge_index, batch.batch)
-        num_correct += (output.argmax(dim=1) == batch.y).sum().item()
-        num_samples += len(batch.y)
-    torch.cuda.empty_cache()
-    return num_correct / num_samples
-
-def xgb_train(train_data, train_label, test_data, 
-              params={'max_depth': 5, 'eta': 0.1, 'objective': 'binary:logistic'}, num_round=1000):
-    train = xgb.DMatrix(train_data, label=train_label)
-    test = xgb.DMatrix(test_data)
-    booster = xgb.train(params, train, num_round)
-    preds = booster.predict(test)
-    return preds
+    def train(self):
+        self.training = True
+        self.gat.train()
+        if self.tail is not None: self.tail.train()
+    def eval(self):
+        self.training = False
+        self.gat.eval()
+        if self.tail is not None: self.tail.eval()
