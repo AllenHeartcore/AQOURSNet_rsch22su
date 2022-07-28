@@ -1,18 +1,26 @@
 import torch
+from torch.cuda.amp import autocast, GradScaler
 import xgboost as xgb
 from tqdm import tqdm
 from utils import write_log
 
 def train_epoch(model, loader, loss_func, optimizer, args):
     model.train()
+    if args.amp: scaler = GradScaler()
     total_loss, num_correct, num_samples = 0., 0, 0
     for batch in loader:
         batch = batch.to(args.device)
-        optimizer.zero_grad()
-        output = model(batch.x, batch.edge_index, batch.batch)
-        loss = loss_func(output, batch.y)
-        loss.backward()
-        optimizer.step()
+        optimizer.zero_grad(set_to_none=True)
+        with autocast(enabled=args.amp):
+            output = model(batch.x, batch.edge_index, batch.batch)
+            loss = loss_func(output, batch.y)
+        if args.amp:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            optimizer.step()
         total_loss += loss.item()
         num_correct += (output.argmax(dim=1) == batch.y).sum().item()
         num_samples += len(batch.y)
@@ -40,7 +48,7 @@ def process(model, train_loader, test_loader, loss_func, optimizer, args):
         loss, train_acc = train_epoch(model, train_loader, loss_func, optimizer, args)
         test_acc = test_epoch(model, test_loader, args)
         tqdm_meter.set_postfix(
-            Epoch='%3d' % epoch + 1,
+            Epoch='%3d' % (epoch + 1),
             Loss ='%6f' % loss,
             TrainAcc='%6.2f%%' % (train_acc * 100),
             TestAcc ='%6.2f%%' % (test_acc * 100))
@@ -55,11 +63,3 @@ def process(model, train_loader, test_loader, loss_func, optimizer, args):
         torch.cuda.empty_cache()
     tqdm_meter.close()
 
-def xgb_train(train_data, train_label, test_data, 
-              params={'max_depth': 5, 'eta': 0.1, 
-              'objective': 'binary:logistic'}, num_round=1000):
-    train = xgb.DMatrix(train_data, label=train_label)
-    test = xgb.DMatrix(test_data)
-    booster = xgb.train(params, train, num_round)
-    preds = booster.predict(test)
-    return preds

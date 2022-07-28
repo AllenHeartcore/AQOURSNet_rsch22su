@@ -41,10 +41,11 @@ parser.add_argument('--ts2vec',           action='store_true',   default=False, 
 parser.add_argument('--ts2vec-dhidden',   type=int,              default=64,           help='Hidden dimension of TS2Vec encoder')
 parser.add_argument('--ts2vec-dembed',    type=int,              default=320,          help='Embedding dimension of TS2Vec encoder')
 parser.add_argument('--ts2vec-nlayer',    type=int,              default=10,           help='Number of layers in TS2Vec encoder')
-parser.add_argument('--dtw',              action='store_true',   default=False,        help='Switch for using DTW')
+parser.add_argument('--dtw',              action='store_true',   default=False,        help='Switch for using Dynamic Time Warping')
 parser.add_argument('--dtw-dist',         type=str,              default='euclidean',  help='Pointwise distance function of DTW')
 parser.add_argument('--dtw-step',         type=str,              default='symmetric2', help='Local warping step pattern of DTW')
 parser.add_argument('--dtw-window',       type=str,              default='none',       help='Windowing function of DTW')
+parser.add_argument('--amp',              action='store_true',   default=False,        help='Switch for using Automatic Mixed Precision')
 
 args = parser.parse_args()
 seed_torch(args.seed)
@@ -52,7 +53,7 @@ seed_torch(args.seed)
 # PARAMETER PREPARATION
 cwd = os.getcwd()
 model_eigenvalue = get_eigenvalue(args)
-print('[Model eigenvalue] %s' % model_eigenvalue)
+print('[Model Eigenvalue] %s' % model_eigenvalue)
 setattr(args, 'nameset', args.dataset.split('/')[-1].split('.')[0])
 setattr(args, 'dircache_shapelet', '%s/output/%s-shapelet-nsp%d-nsg%d.npy' \
         % (cwd, args.nameset, args.nshapelet, args.nsegment))
@@ -62,6 +63,7 @@ setattr(args, 'dirmodel', '%s/output/%s-AQOURSNet-%s.pt' \
         % (cwd, args.nameset, model_eigenvalue))
 setattr(args, 'dirlog', '%s/output/%s-log-%s.txt' \
         % (cwd, args.nameset, model_eigenvalue))
+if args.device != 'cuda': args.amp = False
 
 # DATA LOADING 
 train_data, train_labels, test_data, test_labels = read_dataset(args.dataset)

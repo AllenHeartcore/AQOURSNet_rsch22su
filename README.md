@@ -38,14 +38,15 @@ Possible arguments are described below.
     <tr> <td> <code>--optim</code> </td> <td> Optimization algorithm for learning<br>(See <a href="https://pytorch.org/docs/stable/optim.html#algorithms"><code>torch.optim</code></a> for a list) </td> <td> <code>Adam</code> </td> </tr>
     <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
     <tr> <td> <code>--wd</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
-    <tr> <td rowspan="8"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using <i>TS2VEC*</i> </td> <td> <code>False</code> </td> </tr>
+    <tr> <td rowspan="9"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using <i>TS2VEC*</i> </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
     <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
     <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
-    <tr> <td> <code>--dtw</code> </td> <td> Switch for using DTW </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--dtw</code> </td> <td> Switch for using Dynamic Time Warping </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
     <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
     <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
+    <tr> <td> <code>--amp</code> </td> <td> Switch for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
 </table>
 
 ****WARNING:** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
