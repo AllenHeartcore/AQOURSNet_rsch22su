@@ -33,26 +33,27 @@ def test_epoch(model, loader, args):
 
 def process(model, train_loader, test_loader, loss_func, optimizer, args):
     tqdm_meter = tqdm(desc='[Training GAT]')
-    write_log(args.namelog, str(args.__dict__)+'\n')
-    best_train_acc, best_test_acc, best_model = 0., 0., None
+    write_log(args.dirlog, '\n'+str(args.__dict__)+'\n')
+    best_train_acc, best_test_acc = 0., 0.
 
     for epoch in range(args.nepoch):
         loss, train_acc = train_epoch(model, train_loader, loss_func, optimizer, args)
         test_acc = test_epoch(model, test_loader, args)
         tqdm_meter.set_postfix(
-            Epoch='%3d' % epoch,
+            Epoch='%3d' % epoch + 1,
             Loss ='%6f' % loss,
             TrainAcc='%6.2f%%' % (train_acc * 100),
             TestAcc ='%6.2f%%' % (test_acc * 100))
         tqdm_meter.update()
-        write_log(args.namelog, 'Epoch %03d, Loss %.6f, TrainAcc %6.2f%%, TestAcc %6.2f%%\n' 
-                    % (epoch, loss, train_acc * 100, test_acc * 100))
+        write_log(args.dirlog, 'Epoch %03d, Loss %.6f, TrainAcc %6.2f%%, TestAcc %6.2f%%\n' 
+                    % (epoch + 1, loss, train_acc * 100, test_acc * 100))
 
         if test_acc > best_test_acc or (test_acc == best_test_acc and train_acc > best_train_acc):
             best_test_acc = test_acc
             best_train_acc = train_acc
-            best_model = model.state_dict()
+            torch.save(model, args.dirmodel)
         torch.cuda.empty_cache()
+    tqdm_meter.close()
 
 def xgb_train(train_data, train_label, test_data, 
               params={'max_depth': 5, 'eta': 0.1, 

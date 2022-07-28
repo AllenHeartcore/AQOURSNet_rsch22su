@@ -81,7 +81,7 @@ Possible arguments are described below.
         - `dtw` (#2 Enhancement)
     - `network.py` (#4, #5)
         - `xgboost` - ***TO BE IMPLEMENTED***
-    - `train.py` (#4 Wrapper, #5 Wrapper)
+    - `process.py` (#4 Wrapper, #5 Wrapper)
 
 ## Folder Structure
 - `Stanford_CS224w` - a prerequisite [course](http://web.stanford.edu/class/cs224w/)

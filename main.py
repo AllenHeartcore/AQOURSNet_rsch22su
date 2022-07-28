@@ -1,5 +1,6 @@
-import torch, argparse, warnings
-from utils import seed_torch, read_dataset, graph_dataloader
+import numpy as np
+import torch, argparse, warnings, os
+from utils import seed_torch, get_eigenvalue, read_dataset, graph_dataloader
 from construct_graph import extract_shapelets, embed_series, adjacency_matrix
 from network import NeuralNetwork
 from process import process
@@ -48,23 +49,53 @@ parser.add_argument('--dtw-window',       type=str,              default='none',
 args = parser.parse_args()
 seed_torch(args.seed)
 
-# DATA LOADING
+# PARAMETER PREPARATION
+cwd = os.getcwd()
+model_eigenvalue = get_eigenvalue(args)
+print('[Model eigenvalue] %s' % model_eigenvalue)
+setattr(args, 'nameset', args.dataset.split('/')[-1].split('.')[0])
+setattr(args, 'dircache_shapelet', '%s/output/%s-shapelet-nsp%d-nsg%d.npy' \
+        % (cwd, args.nameset, args.nshapelet, args.nsegment))
+setattr(args, 'dircache_graph', '%s/output/%s-graph-nsp%d-nsg%d-pct%d.npz' \
+        % (cwd, args.nameset, args.nshapelet, args.nsegment, args.percent))
+setattr(args, 'dirmodel', '%s/output/%s-AQOURSNet-%s.pt' \
+        % (cwd, args.nameset, model_eigenvalue))
+setattr(args, 'dirlog', '%s/output/%s-log-%s.txt' \
+        % (cwd, args.nameset, model_eigenvalue))
+
+# DATA LOADING 
 train_data, train_labels, test_data, test_labels = read_dataset(args.dataset)
+len_shapelet = int(train_data.shape[1] / args.nsegment)
 setattr(args, 'nclass', train_labels.max() + 1)
 setattr(args, 'batchsize', len(train_data) // args.nbatch)
-setattr(args, 'nameset', args.dataset.split('/')[-1].split('.')[0])
-setattr(args, 'namelog', 'output/AQOURSNet-log-%s.txt' % args.nameset)
-len_shapelet = int(train_data.shape[1] / args.nsegment)
 
 # SHAPELET EMBEDDING & GRAPH GENERATION
-shapelets = extract_shapelets(train_data,    len_shapelet,  args)
-train_node_features = embed_series(train_data,  shapelets,  args)
-test_node_features  = embed_series(test_data,   shapelets,  args)
-train_edge_matrices = adjacency_matrix(train_node_features, args)
-test_edge_matrices  = adjacency_matrix(test_node_features,  args)
+if os.path.exists(args.dircache_graph):
+    print('[Loading Graph Cache]')
+    graph = np.load(args.dircache_graph)
+    for field in graph.files:
+        globals()[field] = graph[field]
+else:
+    if os.path.exists(args.dircache_shapelet):
+        print('[Loading Shapelets Cache]')
+        shapelets = np.load(args.dircache_shapelet)
+    else:
+        shapelets = extract_shapelets(train_data, len_shapelet, args)
+        np.save(args.dircache_shapelet, shapelets)
+    train_node_features = embed_series(train_data,  shapelets,  args)
+    test_node_features  = embed_series(test_data,   shapelets,  args)
+    train_edge_matrices = adjacency_matrix(train_node_features, args)
+    test_edge_matrices  = adjacency_matrix(test_node_features,  args)
+    np.savez(args.dircache_graph, 
+            train_node_features=train_node_features, test_node_features=test_node_features,
+            train_edge_matrices=train_edge_matrices, test_edge_matrices=test_edge_matrices)
 
 # GAT NETWORK & TRAINING
-model = NeuralNetwork(args).to(args.device)
+if os.path.exists(args.dirmodel):
+    print('[Loading Pretrained Model]')
+    model = torch.load(args.dirmodel).to(args.device)
+else:
+    model = NeuralNetwork(args).to(args.device)
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = eval('torch.optim.%s' % args.optim)(model.parameters(), lr=args.lr, weight_decay=args.wd)
 train_loader = graph_dataloader(train_node_features, train_edge_matrices, train_labels, args)

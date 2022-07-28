@@ -1,5 +1,6 @@
 import numpy as np
 import torch, os, random
+from crypt import crypt
 from torch_geometric.data import Data, Dataset
 from torch_geometric.loader import DataLoader
 
@@ -16,6 +17,15 @@ def seed_torch(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+
+def get_eigenvalue(args):
+    argsval = tuple(args.__dict__.values())
+    argsval = [str(i) for i in argsval]
+    argsval = '-'.join(argsval[3:15] + argsval[20:])
+    salt = [str(args.seed)] * 8
+    salt = '$1$' + ''.join(salt)
+    eigenvalue = crypt(argsval, salt)[12:]
+    return eigenvalue.replace('.', '_').replace('/', '+')
 
 def read_dataset(dataset_name):
     try:
