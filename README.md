@@ -3,19 +3,15 @@
 [Ziyuan Chen](mailto:ziyuan.20@intl.zju.edu.cn), [Zhirong Chen](mailto:zhirong.20@intl.zju.edu.cn) | July 2022 <br>
 Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yangy.org/), Zhejiang University
 
-This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
+### This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
 
-## Important Notes
-
-- This version of demo code works with the attached `ucr_dataset`. <br>
-Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22su/releases) for compatibility support with customized datasets. 
-- For fine-tuned GAT and out-of-the-box TS2Vec, refer to [rong-hash/Time2GraphRework](https://github.com/rong-hash/Time2GraphRework). 
+<br>
 
 ![Diagram](presentation/aqoursnet_diagram.png)
 
 ## Running the Program
     $ pip install -r Requirements.txt
-    $ python main.py dataset [--argument ARGUMENT]
+    $ python main.py ucr_dataset/dataset [--argument ARGUMENT]
 
 Possible arguments are described below. 
 
@@ -24,35 +20,40 @@ Possible arguments are described below.
     <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
     <tr> <td> <code>--seed</code> </td> <td> Random seed </td> <td> 42 </td> </tr>
     <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu</code> </td> </tr>
-    <tr> <td rowspan="5"> <b>Shapelets</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="9"> <b>Shapelet</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
     <tr> <td> <code>--nsegment</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
+    <tr> <td> <code>--smpratio</code> </td> <td> Pos/Neg ratio for up/downsampling<br>(set to 0 = disable biased sampling) </td> <td> 0 </td> </tr>
     <tr> <td> <code>--maxiter</code> </td> <td> Max number of iterations of KMeans </td> <td> 300 </td> </tr>
     <tr> <td> <code>--tol</code> </td> <td> Tolerance of KMeans </td> <td> 0.0001 </td> </tr>
-    <tr> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
-    <tr> <td rowspan="7"> <b>GAT</b> </td> <td> <code>--dhidden</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
+    <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2VEC</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
+    <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
+    <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
+    <tr> <td rowspan="5"> <b>Graph</b> </td> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
+    <tr> <td> <code>--dtw</code> </td> <td> <i>Switch</i><b>*</b> for using Dynamic Time Warping </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
+    <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
+    <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
+    <tr> <td rowspan="7"> <b><i>GAT</i>***</b> </td> <td> <code>--dhidden</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
     <tr> <td> <code>--dembed</code> </td> <td> Embedding dimension of graph<br>(output dimension of GAT) </td> <td> 64 </td> </tr>
     <tr> <td> <code>--nlayer</code> </td> <td> Number of layers </td> <td> 4 </td> </tr>
     <tr> <td> <code>--nhead</code> </td> <td> Number of attention heads </td> <td> 8 </td> </tr>
     <tr> <td> <code>--negslope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
     <tr> <td> <code>--dropout</code> </td> <td> Dropout rate </td> <td> 0.5 </td> </tr>
     <tr> <td> <code>--tail</code> </td> <td> Type of prediction tail<br>(One of <code>none</code>, <code>linear</code>, <code>mlp</code>, <code>resnet</code>) </td> <td> <code>linear</code> </td> </tr>
-    <tr> <td rowspan="5"> <b>Training</b> </td> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
+    <tr> <td rowspan="6"> <b>Training</b> </td> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
     <tr> <td> <code>--nbatch</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
     <tr> <td> <code>--optim</code> </td> <td> Optimization algorithm for learning<br>(See <a href="https://pytorch.org/docs/stable/optim.html#algorithms"><code>torch.optim</code></a> for a list) </td> <td> <code>Adam</code> </td> </tr>
     <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
     <tr> <td> <code>--wd</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
-    <tr> <td rowspan="9"> <b>Enhancements</b> </td> <td> <code>--ts2vec</code> </td> <td> Switch for using <i>TS2VEC*</i> </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
-    <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
-    <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
-    <tr> <td> <code>--dtw</code> </td> <td> Switch for using Dynamic Time Warping </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
-    <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
-    <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
-    <tr> <td> <code>--amp</code> </td> <td> Switch for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--amp</code> </td> <td> <i>Switch</i><b>*</b> for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
 </table>
 
-***WARNING:** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
+***\*** Switches have `action='store_true'`: their presence means `True`, and absence means `False`. <br> &emsp; Usage like `... --switch True` or `... --switch False` would result in a parsing error.*
+
+***\*\*** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> &emsp; In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
+
+***\*\*\*** For fine-tuned GAT and out-of-the-box TS2Vec, refer to [rong-hash/Time2GraphRework](https://github.com/rong-hash/Time2GraphRework).*
 
 ## Model Pipeline
 0. Data preparation
