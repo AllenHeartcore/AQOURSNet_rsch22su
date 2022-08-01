@@ -18,12 +18,20 @@ def seed_torch(seed):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
+def check_validity(args, allow_zero):
+    for field, value in args.__dict__.items():
+        if not (isinstance(value, str) or isinstance(value, bool)):
+            if field in allow_zero:
+                assert value >= 0, 'args.%s must be non-negative' % field
+            else:
+                assert value > 0, 'args.%s must be positive' % field
+
 def get_eigenvalue(args, evtype):
     argsval = tuple(args.__dict__.values())
     argsval = [str(i) for i in argsval]
-    if evtype == 'shape': argsval = '-'.join(argsval[3:6] + argsval[-9:-5])
-    if evtype == 'graph': argsval = '-'.join(argsval[3:9] + argsval[-9:-1])
-    if evtype == 'model': argsval = '-'.join(argsval[3:16] + argsval[-9:])
+    if evtype == 'shape': argsval = '-'.join(argsval[3:12])
+    if evtype == 'graph': argsval = '-'.join(argsval[3:17])
+    if evtype == 'model': argsval = '-'.join(argsval[3:24])
     salt = [str(args.seed)] * 8
     salt = '$1$' + ''.join(salt)
     eigenvalue = crypt(argsval, salt)[12:]
