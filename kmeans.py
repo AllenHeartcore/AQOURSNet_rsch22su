@@ -8,17 +8,17 @@ def initialize(X, num_clusters):
     initial_state = X[indices]
     return initial_state
 
-def kmeans(X, args):
+def kmeans(X, num_clusters, args, dtype):
     X = X.float()
     X = X.to(args.device)
-    initial_state = initialize(X, args.nshapelet)
+    initial_state = initialize(X, num_clusters)
     iteration = 0
-    tqdm_meter = tqdm(desc='[Running KMeans]')
+    tqdm_meter = tqdm(desc='[Extracting %sShapelets]' % dtype)
     while iteration < args.maxiter:
         dis = pairwise_distance(X, initial_state, args.device)
         choice_cluster = torch.argmin(dis, dim=1)
         initial_state_pre = initial_state.clone()
-        for index in range(args.nshapelet):
+        for index in range(num_clusters):
             selected = torch.nonzero(choice_cluster == index).squeeze().to(args.device)
             selected = torch.index_select(X, 0, selected)
             initial_state[index] = selected.mean(dim=0)

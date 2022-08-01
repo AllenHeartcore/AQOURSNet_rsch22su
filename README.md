@@ -5,8 +5,11 @@ Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yang
 
 This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
 
-**IMPORTANT:** This version of demo code works with the attached `ucr_dataset`. <br>
+## Important Notes
+
+- This version of demo code works with the attached `ucr_dataset`. <br>
 Refer to the latest [release](https://github.com/AllenHeartcore/AQOURSNet_rsch22su/releases) for compatibility support with customized datasets. 
+- For fine-tuned GAT and out-of-the-box TS2Vec, refer to [rong-hash/Time2GraphRework](https://github.com/rong-hash/Time2GraphRework). 
 
 ![Diagram](presentation/aqoursnet_diagram.png)
 
@@ -49,7 +52,7 @@ Possible arguments are described below.
     <tr> <td> <code>--amp</code> </td> <td> Switch for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
 </table>
 
-****WARNING:** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
+***WARNING:** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
 
 ## Model Pipeline
 0. Data preparation
