@@ -21,6 +21,7 @@ parser.add_argument('--nsegment',  type=int,   default=20,       help='Number of
 parser.add_argument('--smpratio',  type=float, default=0,        help='P/N ratio for up/downsampling (0 = follow training set)')
 parser.add_argument('--maxiter',   type=int,   default=300,      help='Max number of KMeans iterations')
 parser.add_argument('--tol',       type=float, default=1e-4,     help='Tolerance of KMeans')
+parser.add_argument('--kmedians',         action='store_true',   default=False,        help='Switch for using KMedians instead of KMeans')
 parser.add_argument('--ts2vec',           action='store_true',   default=False,        help='Switch for using TS2VEC')
 parser.add_argument('--ts2vec-dhidden',   type=int,              default=64,           help='Hidden dimension of TS2Vec encoder')
 parser.add_argument('--ts2vec-dembed',    type=int,              default=320,          help='Embedding dimension of TS2Vec encoder')

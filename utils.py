@@ -29,9 +29,9 @@ def check_validity(args, allow_zero):
 def get_eigenvalue(args, evtype):
     argsval = tuple(args.__dict__.values())
     argsval = [str(i) for i in argsval]
-    if evtype == 'shape': argsval = '-'.join(argsval[3:12])
-    if evtype == 'graph': argsval = '-'.join(argsval[3:17])
-    if evtype == 'model': argsval = '-'.join(argsval[3:24])
+    if evtype == 'shape': argsval = '-'.join(argsval[3:13])
+    if evtype == 'graph': argsval = '-'.join(argsval[3:18])
+    if evtype == 'model': argsval = '-'.join(argsval[3:25])
     salt = [str(args.seed)] * 8
     salt = '$1$' + ''.join(salt)
     eigenvalue = crypt(argsval, salt)[12:]
@@ -47,12 +47,12 @@ def read_dataset(dataset_name):
 class GraphDataset(Dataset):
     def __init__(self, node_features, edge_matrices, labels):
         super(GraphDataset, self).__init__()
-        node_features, edge_matrices, labels = map(lambda x: torch.tensor(x), 
+        node_features, edge_matrices, labels = map(lambda x: torch.tensor(x),
                                                    (node_features, edge_matrices, labels))
         self.data = []
         for node_feature, edge_matrix, label in zip(node_features, edge_matrices, labels):
-            self.data.append(Data(x=node_feature.float(), 
-                                  edge_index=edge_matrix.nonzero().T, 
+            self.data.append(Data(x=node_feature.float(),
+                                  edge_index=edge_matrix.nonzero().T,
                                   y=label, num_nodes=node_feature.shape[0]))
     def __len__(self):
         return len(self.data)
@@ -61,5 +61,5 @@ class GraphDataset(Dataset):
 
 def graph_dataloader(node_features, edge_matrices, labels, args):
     dataset = GraphDataset(node_features, edge_matrices, labels)
-    return DataLoader(dataset, batch_size=args.batchsize, 
+    return DataLoader(dataset, batch_size=args.batchsize,
                       shuffle=True, num_workers=torch.cuda.device_count())

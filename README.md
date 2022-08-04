@@ -1,9 +1,9 @@
 # AQOURSNet: Time2Graph Rework
 
-[Ziyuan Chen](mailto:ziyuan.20@intl.zju.edu.cn), [Zhirong Chen](mailto:zhirong.20@intl.zju.edu.cn) | July 2022 <br>
+[Ziyuan Chen](mailto:ziyuan.20@intl.zju.edu.cn), [Zhirong Chen](mailto:zhirong.20@intl.zju.edu.cn) | July 2022<br>
 Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yangy.org/), Zhejiang University
 
-### This work is protected under the [MIT License](https://opensource.org/licenses/MIT). <br> **Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
+### This work is protected under the [MIT License](https://opensource.org/licenses/MIT).<br>**Copyright (c) 2022 Ziyuan Chen & Zhirong Chen** unless otherwise noted. 
 
 <br>
 
@@ -20,11 +20,12 @@ Possible arguments are described below.
     <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
     <tr> <td> <code>--seed</code> </td> <td> Random seed </td> <td> 42 </td> </tr>
     <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu</code> </td> </tr>
-    <tr> <td rowspan="9"> <b>Shapelet</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="10"> <b>Shapelet</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
     <tr> <td> <code>--nsegment</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
     <tr> <td> <code>--smpratio</code> </td> <td> Pos/Neg ratio for up/downsampling<br>(set to 0 = disable biased sampling) </td> <td> 0 </td> </tr>
     <tr> <td> <code>--maxiter</code> </td> <td> Max number of iterations of KMeans </td> <td> 300 </td> </tr>
     <tr> <td> <code>--tol</code> </td> <td> Tolerance of KMeans </td> <td> 0.0001 </td> </tr>
+    <tr> <td> <code>--kmedians</code> </td> <td> <i>Switch</i><b>*</b> for using KMedians<br>instead of KMeans in clustering </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2VEC</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
     <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
@@ -49,9 +50,9 @@ Possible arguments are described below.
     <tr> <td> <code>--amp</code> </td> <td> <i>Switch</i><b>*</b> for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
 </table>
 
-***\*** Switches have `action='store_true'`: their presence means `True`, and absence means `False`. <br> &emsp; Usage like `... --switch True` or `... --switch False` would result in a parsing error.*
+***\*** Switches have `action='store_true'`: their presence means `True`, and absence means `False`.<br>&emsp; Usage like `... --switch True` or `... --switch False` would result in a parsing error.*
 
-***\*\*** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution. <br> &emsp; In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
+***\*\*** The condensed `ts2vec.py` (`--ts2vec` options) has **not** been thoroughly tested. Use with caution.<br>&emsp; In case it fails, delete `ts2vec.py`, and clone [yuezhihan/ts2vec](https://github.com/yuezhihan/ts2vec) under the same folder.*
 
 ***\*\*\*** For fine-tuned GAT and out-of-the-box TS2Vec, refer to [rong-hash/Time2GraphRework](https://github.com/rong-hash/Time2GraphRework).*
 

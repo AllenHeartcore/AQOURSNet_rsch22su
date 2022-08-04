@@ -21,7 +21,8 @@ def kmeans(X, num_clusters, args, dtype):
         for index in range(num_clusters):
             selected = torch.nonzero(choice_cluster == index).squeeze().to(args.device)
             selected = torch.index_select(X, 0, selected)
-            initial_state[index] = selected.mean(dim=0)
+            if args.kmedians: initial_state[index] = selected.median(dim=0).values
+            else: initial_state[index] = selected.mean(dim=0)
         center_shift = torch.sum(torch.sqrt(torch.sum( \
             (initial_state - initial_state_pre) ** 2, dim=1)))
         iteration = iteration + 1
@@ -33,7 +34,7 @@ def kmeans(X, num_clusters, args, dtype):
         tqdm_meter.update()
         if center_shift ** 2 < args.tol:
             break
-    return dis.cpu(), choice_cluster.cpu()
+    return dis.cpu(), choice_cluster.cpu(), initial_state.cpu()
 
 def pairwise_distance(data1, data2, device):
     data1, data2 = data1.to(device), data2.to(device)

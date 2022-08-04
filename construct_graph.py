@@ -14,16 +14,17 @@ def extract_shapelets(series_set, num_shapelets, args, dtype):
                             for i in range(l - args.lshapelet + 1)])
     if args.ts2vec:
         if cands.ndim == 2: cands = np.expand_dims(cands, axis=2)
-        model = TS2Vec(cands.shape[2], args.device, 
-                        hidden_dims=args.ts2vec_dhidden, 
-                        output_dims=args.ts2vec_dembed, 
+        model = TS2Vec(cands.shape[2], args.device,
+                        hidden_dims=args.ts2vec_dhidden,
+                        output_dims=args.ts2vec_dembed,
                         depth=args.ts2vec_nlayer)
         model.fit(cands)
         cands = model.encode(cands)
-    dist, classes = kmeans(torch.from_numpy(cands), num_shapelets, args, dtype)
+    dist, classes, centers = kmeans(torch.from_numpy(cands), num_shapelets, args, dtype)
+    if args.device == 'cuda': torch.cuda.empty_cache()
+    if args.kmedians: return centers.to('cpu').numpy()
     dist = dist.to('cpu').numpy().min(axis=1)
     classes = classes.to('cpu').numpy()
-    if args.device == 'cuda': torch.cuda.empty_cache()
     shapelets = []
     for i in range(num_shapelets):
         shapelets.append(cands[classes == i][np.argmin(dist[classes == i])])
@@ -34,10 +35,10 @@ def segmented_distance(series, shapelet, args):
     if l % m != 0: series = series[:-(l % m)]
     segments = series.reshape(-1, m)[:args.nsegment] # shape = (l / m, m)
     if args.dtw:
-        return np.array([dtw(shapelet, segment, 
-                            distance_only=True, 
-                            dist_method=args.dtw_dist, 
-                            step_pattern=args.dtw_step, 
+        return np.array([dtw(shapelet, segment,
+                            distance_only=True,
+                            dist_method=args.dtw_dist,
+                            step_pattern=args.dtw_step,
                             window_type=args.dtw_window).distance for segment in segments])
     else:
         return np.linalg.norm(segments - shapelet, axis=1) # shape = (l / m,)
