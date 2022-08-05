@@ -13,40 +13,48 @@ Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yang
     $ pip install -r Requirements.txt
     $ python main.py ucr_dataset/dataset [--argument ARGUMENT]
 
-Possible arguments are described below. 
+For instance,
+
+    $ python main.py ucr_dataset/Coffee --tail mlp --lr 5e-4 --dtw --kmedians --amp
+
+Possible `argument`s are presented below. 
 
 <table>
     <tr> <td> <b>Category</b> </td> <td> <b>Argument</b> </td> <td> <b>Description</b> </td> <td> <b>Default</b> </td> </tr>
-    <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>dataset</code> </td> <td> Name of UCR dataset </td> <td> <i>Required</i> </td> </tr>
+    <tr> <td rowspan="3"> <b>Dataset</b> </td> <td> <code>dataset</code> </td> <td> Name of dataset </td> <td> <i>Required</i> </td> </tr>
     <tr> <td> <code>--seed</code> </td> <td> Random seed </td> <td> 42 </td> </tr>
     <tr> <td> <code>--device</code> </td> <td> Device to use </td> <td> <code>cuda</code> if available<br>else <code>cpu</code> </td> </tr>
-    <tr> <td rowspan="10"> <b>Shapelet</b> </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="6"> <b>Shapelet<br>& Graph</b>
+    </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
     <tr> <td> <code>--nsegment</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
     <tr> <td> <code>--smpratio</code> </td> <td> Pos/Neg ratio for up/downsampling<br>(set to 0 = disable biased sampling) </td> <td> 0 </td> </tr>
-    <tr> <td> <code>--maxiter</code> </td> <td> Max number of iterations of KMeans </td> <td> 300 </td> </tr>
+    <tr> <td> <code>--maxiter</code> </td> <td> Max number of KMeans iterations </td> <td> 300 </td> </tr>
     <tr> <td> <code>--tol</code> </td> <td> Tolerance of KMeans </td> <td> 0.0001 </td> </tr>
-    <tr> <td> <code>--kmedians</code> </td> <td> <i>Switch</i><b>*</b> for using KMedians<br>instead of KMeans in clustering </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2VEC</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
-    <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
-    <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
-    <tr> <td rowspan="5"> <b>Graph</b> </td> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
-    <tr> <td> <code>--dtw</code> </td> <td> <i>Switch</i><b>*</b> for using Dynamic Time Warping </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
-    <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
-    <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
-    <tr> <td rowspan="7"> <b><i>GAT</i>***</b> </td> <td> <code>--dhidden</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
+    </td> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
+    <tr> <td rowspan="7"> <b><i>GAT</i>***</b>
+    </td> <td> <code>--dhidden</code> </td> <td> Hidden dimension </td> <td> 256 </td> </tr>
     <tr> <td> <code>--dembed</code> </td> <td> Embedding dimension of graph<br>(output dimension of GAT) </td> <td> 64 </td> </tr>
     <tr> <td> <code>--nlayer</code> </td> <td> Number of layers </td> <td> 4 </td> </tr>
     <tr> <td> <code>--nhead</code> </td> <td> Number of attention heads </td> <td> 8 </td> </tr>
     <tr> <td> <code>--negslope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
     <tr> <td> <code>--dropout</code> </td> <td> Dropout rate </td> <td> 0.5 </td> </tr>
     <tr> <td> <code>--tail</code> </td> <td> Type of prediction tail<br>(One of <code>none</code>, <code>linear</code>, <code>mlp</code>, <code>resnet</code>) </td> <td> <code>linear</code> </td> </tr>
-    <tr> <td rowspan="6"> <b>Training</b> </td> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
+    <tr> <td rowspan="5"> <b>Training</b>
+    </td> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
     <tr> <td> <code>--nbatch</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
     <tr> <td> <code>--optim</code> </td> <td> Optimization algorithm for learning<br>(See <a href="https://pytorch.org/docs/stable/optim.html#algorithms"><code>torch.optim</code></a> for a list) </td> <td> <code>Adam</code> </td> </tr>
     <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
     <tr> <td> <code>--wd</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
+    <tr> <td rowspan="11"> <b>Enhancements</b>
+    <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2VEC</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
+    <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
+    <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
+    <tr> <td> <code>--dtw</code> </td> <td> <i>Switch</i><b>*</b> for using Dynamic Time Warping </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
+    <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
+    <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
+    <tr> <td> <code>--kmedians</code> </td> <td> <i>Switch</i><b>*</b> for using KMedians<br>in place of KMeans in clustering </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--amp</code> </td> <td> <i>Switch</i><b>*</b> for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
 </table>
 
@@ -81,9 +89,8 @@ Possible arguments are described below.
 ## Call Hierarchy
 - `main.py`
     - `utils.py` (#0, #4 Wrapper)
-    - `construct_graph.py` (#1 Wrapper, #2, #3)
+    - `construct_graph.py` (#1 Wrapper, #1, #2, #3)
         - `ts2vec.py` (#1 Enhancement)
-        - `kmeans.py` (#1)
         - `dtw` (#2 Enhancement)
     - `network.py` (#4, #5)
         - `xgboost` - ***TO BE IMPLEMENTED***

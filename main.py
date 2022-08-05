@@ -8,31 +8,21 @@ from network import NeuralNetwork
 from process import process
 
 filterwarnings('ignore')
-parser = ArgumentParser(description='AQOURSNet by Ziyuan Chen and Zhirong Chen')
+parser = ArgumentParser(description='''AQOURSNet by Ziyuan Chen and Zhirong Chen.
+See https://github.com/AllenHeartcore/AQOURSNet_rsch22su for the complete docs.''')
 
 # PARAMS - DATA
 parser.add_argument('dataset',     type=str,   help='Name of dataset')
 parser.add_argument('--seed',      type=int,   default=42,       help='Random seed')
 parser.add_argument('--device',    type=str,   default='cuda' if torch.cuda.is_available() else 'cpu', help='Device to use')
 
-# PARAMS - SHAPELET
+# PARAMS - SHAPELET & GRAPH
 parser.add_argument('--nshapelet', type=int,   default=30,       help='Number of shapelets to extract')
 parser.add_argument('--nsegment',  type=int,   default=20,       help='Number of segments for shapelet mapping')
-parser.add_argument('--smpratio',  type=float, default=0,        help='P/N ratio for up/downsampling (0 = follow training set)')
+parser.add_argument('--smpratio',  type=float, default=0,        help='Pos/Neg ratio for up/downsampling (0 = follow training set)')
 parser.add_argument('--maxiter',   type=int,   default=300,      help='Max number of KMeans iterations')
 parser.add_argument('--tol',       type=float, default=1e-4,     help='Tolerance of KMeans')
-parser.add_argument('--kmedians',         action='store_true',   default=False,        help='Switch for using KMedians instead of KMeans')
-parser.add_argument('--ts2vec',           action='store_true',   default=False,        help='Switch for using TS2VEC')
-parser.add_argument('--ts2vec-dhidden',   type=int,              default=64,           help='Hidden dimension of TS2Vec encoder')
-parser.add_argument('--ts2vec-dembed',    type=int,              default=320,          help='Embedding dimension of TS2Vec encoder')
-parser.add_argument('--ts2vec-nlayer',    type=int,              default=10,           help='Number of layers in TS2Vec encoder')
-
-# PARAMS - GRAPH
 parser.add_argument('--percent',   type=int,   default=30,       help='Percentile for pruning weak edges')
-parser.add_argument('--dtw',              action='store_true',   default=False,        help='Switch for using Dynamic Time Warping')
-parser.add_argument('--dtw-dist',         type=str,              default='euclidean',  help='Pointwise distance function of DTW')
-parser.add_argument('--dtw-step',         type=str,              default='symmetric2', help='Local warping step pattern of DTW')
-parser.add_argument('--dtw-window',       type=str,              default='none',       help='Windowing function of DTW')
 
 # PARAMS - GAT
 parser.add_argument('--dhidden',   type=int,   default=256,      help='Hidden dimension of GAT')
@@ -49,6 +39,17 @@ parser.add_argument('--nbatch',    type=int,   default=16,       help='Number of
 parser.add_argument('--optim',     type=str,   default='Adam',   help='Optimization algorithm for learning')
 parser.add_argument('--lr',        type=float, default=.001,     help='Learning rate')
 parser.add_argument('--wd',        type=float, default=.001,     help='Weight decay')
+
+# PARAMS - ENHANCEMENTS
+parser.add_argument('--ts2vec',           action='store_true',   default=False,        help='Switch for using TS2VEC')
+parser.add_argument('--ts2vec-dhidden',   type=int,              default=64,           help='Hidden dimension of TS2Vec encoder')
+parser.add_argument('--ts2vec-dembed',    type=int,              default=320,          help='Embedding dimension of TS2Vec encoder')
+parser.add_argument('--ts2vec-nlayer',    type=int,              default=10,           help='Number of layers in TS2Vec encoder')
+parser.add_argument('--dtw',              action='store_true',   default=False,        help='Switch for using Dynamic Time Warping')
+parser.add_argument('--dtw-dist',         type=str,              default='euclidean',  help='Pointwise distance function of DTW')
+parser.add_argument('--dtw-step',         type=str,              default='symmetric2', help='Local warping step pattern of DTW')
+parser.add_argument('--dtw-window',       type=str,              default='none',       help='Windowing function of DTW')
+parser.add_argument('--kmedians',         action='store_true',   default=False,        help='Switch for using KMedians in place of KMeans')
 parser.add_argument('--amp',              action='store_true',   default=False,        help='Switch for using Automatic Mixed Precision')
 
 # PARAMS VERIFICATION
@@ -72,7 +73,9 @@ setattr(args, 'dirlog', '%s/output/%s-log-%s.txt' % (cwd, args.nameset, model_ei
 train_data, train_labels, test_data, test_labels = read_dataset(args.dataset)
 (ntrain, lseries), (ntest, _) = train_data.shape, test_data.shape
 setattr(args, 'nclass', train_labels.max() + 1)
-setattr(args, 'lshapelet', int(train_data.shape[1] / args.nsegment))
+setattr(args, 'nseries', ntrain)
+setattr(args, 'lseries', lseries)
+setattr(args, 'lshapelet', int(lseries / args.nsegment))
 setattr(args, 'batchsize', len(train_data) // args.nbatch)
 nshapelet_neg = int(args.nshapelet // (args.smpratio + 1))
 nshapelet_pos = args.nshapelet - nshapelet_neg
