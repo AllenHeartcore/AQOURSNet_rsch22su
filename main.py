@@ -5,7 +5,7 @@ from warnings import filterwarnings
 from utils import seed_torch, check_validity, get_eigenvalue, read_dataset, graph_dataloader
 from construct_graph import extract_shapelets, embed_series, adjacency_matrix
 from network import NeuralNetwork
-from process import process
+from process import process, process_prf
 
 filterwarnings('ignore')
 parser = ArgumentParser(description='''AQOURSNet by Ziyuan Chen and Zhirong Chen.
@@ -39,6 +39,8 @@ parser.add_argument('--nbatch',    type=int,   default=16,       help='Number of
 parser.add_argument('--optim',     type=str,   default='Adam',   help='Optimization algorithm for learning')
 parser.add_argument('--lr',        type=float, default=.001,     help='Learning rate')
 parser.add_argument('--wd',        type=float, default=.001,     help='Weight decay')
+parser.add_argument('--amp',              action='store_true',   default=False,        help='Switch for using Automatic Mixed Precision')
+parser.add_argument('--f1',               action='store_true',   default=False,        help='Switch for reporting F1 score in place of loss')
 
 # PARAMS - ENHANCEMENTS
 parser.add_argument('--ts2vec',           action='store_true',   default=False,        help='Switch for using TS2VEC')
@@ -50,13 +52,29 @@ parser.add_argument('--dtw-dist',         type=str,              default='euclid
 parser.add_argument('--dtw-step',         type=str,              default='symmetric2', help='Local warping step pattern of DTW')
 parser.add_argument('--dtw-window',       type=str,              default='none',       help='Windowing function of DTW')
 parser.add_argument('--kmedians',         action='store_true',   default=False,        help='Switch for using KMedians in place of KMeans')
-parser.add_argument('--amp',              action='store_true',   default=False,        help='Switch for using Automatic Mixed Precision')
 
-# PARAMS VERIFICATION
 args = parser.parse_args()
 check_validity(args, ['seed', 'smpratio', 'percent', 'negslope', 'dropout', 'wd'])
-if args.device != 'cuda': args.amp = False
 seed_torch(args.seed)
+
+# DATA & PARAMS VERIFICATION
+train_data, train_labels, test_data, test_labels = read_dataset(args.dataset)
+(ntrain, lseries), (ntest, _) = train_data.shape, test_data.shape
+setattr(args, 'nclass', train_labels.max() + 1)
+setattr(args, 'nseries', ntrain)
+setattr(args, 'lseries', lseries)
+setattr(args, 'lshapelet', int(lseries / args.nsegment))
+setattr(args, 'batchsize', len(train_data) // args.nbatch)
+if args.device != 'cuda' and args.amp:
+    print('WARNING: AMP is not supported for non-CUDA devices')
+    args.amp = False
+if args.nclass > 2:
+    if args.smpratio != 0:
+        print('WARNING: Up/downsampling is not supported for multi-class dataset')
+        args.smpratio = 0
+    if args.f1:
+        print('WARNING: F1 score is not supported for multi-class dataset')
+        args.f1 = False
 
 # PARAMS PREPARATION
 cwd = os.getcwd()
@@ -68,41 +86,13 @@ for evtype, ext in zip(['shape', 'graph', 'model'], ['npy', 'npz', 'pt']):
     print('>>> Eigenvalue of %s = %s' % (evtype, ev))
     setattr(args, 'dir%s' % evtype, '%s/output/%s-%s-%s.%s' % (cwd, args.nameset, evtype, ev, ext))
 setattr(args, 'dirlog', '%s/output/%s-log-%s.txt' % (cwd, args.nameset, model_eigenvalue))
-
-# DATA
-train_data, train_labels, test_data, test_labels = read_dataset(args.dataset)
-(ntrain, lseries), (ntest, _) = train_data.shape, test_data.shape
-setattr(args, 'nclass', train_labels.max() + 1)
-setattr(args, 'nseries', ntrain)
-setattr(args, 'lseries', lseries)
-setattr(args, 'lshapelet', int(lseries / args.nsegment))
-setattr(args, 'batchsize', len(train_data) // args.nbatch)
-nshapelet_neg = int(args.nshapelet // (args.smpratio + 1))
-nshapelet_pos = args.nshapelet - nshapelet_neg
 if args.smpratio != 0:
-    if args.nclass > 2:
-        raise ValueError('Up/downsampling is not supported for multi-class dataset')
-    else:
-        print('''
->>> Statistics
-        Train set size    {:>6d}
-        Test set size     {:>6d}
-        Series length     {:>6d}
-        Classes num       {:>6d}
-        Shapelets num (P) {:>6d}
-        Shapelets num (N) {:>6d}
-        Shapelets length  {:>6d}
-'''.format(ntrain, ntest, lseries, args.nclass, nshapelet_pos, nshapelet_neg, args.lshapelet))
-else:
-    print('''
->>> Statistics
-        Train set size    {:>6d}
-        Test set size     {:>6d}
-        Series length     {:>6d}
-        Classes num       {:>6d}
-        Shapelets num     {:>6d}
-        Shapelets length  {:>6d}
-'''.format(ntrain, ntest, lseries, args.nclass, args.nshapelet, args.lshapelet))
+    nshapelet_neg = int(args.nshapelet // (args.smpratio + 1))
+    nshapelet_pos = args.nshapelet - nshapelet_neg
+    print('\n>>> Statistics\n\tTrain set: %d * %d\n\tTest set:  %d * %d\n\tClasses:   %d\n\tShapes P:  %d * %d\n\tShapes N:  %d * %d\n'\
+        % (ntrain, lseries, ntest, lseries, args.nclass, nshapelet_pos, args.lshapelet, nshapelet_neg, args.lshapelet))
+else: print('\n>>> Statistics\n\tTrain set: %d * %d\n\tTest set:  %d * %d\n\tClasses:   %d\n\tShapes:    %d * %d\n'\
+        % (ntrain, lseries, ntest, lseries, args.nclass, args.nshapelet, args.lshapelet))
 
 # SHAPELET & GRAPH
 if os.path.exists(args.dirgraph):
@@ -139,4 +129,5 @@ loss_func = torch.nn.CrossEntropyLoss()
 optimizer = eval('torch.optim.%s' % args.optim)(model.parameters(), lr=args.lr, weight_decay=args.wd)
 train_loader = graph_dataloader(train_node_features, train_edge_matrices, train_labels, args)
 test_loader = graph_dataloader(test_node_features, test_edge_matrices, test_labels, args)
-process(model, train_loader, test_loader, loss_func, optimizer, args)
+if args.f1: process_prf(model, train_loader, test_loader, loss_func, optimizer, args)
+else: process(model, train_loader, test_loader, loss_func, optimizer, args)

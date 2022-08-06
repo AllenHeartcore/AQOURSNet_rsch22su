@@ -15,7 +15,7 @@ Summer Research @ [Yang Yang](https://person.zju.edu.cn/yangy) [Lab](http://yang
 
 For instance,
 
-    $ python main.py ucr_dataset/Coffee --tail mlp --lr 5e-4 --dtw --kmedians --amp
+    $ python main.py ucr_dataset/Strawberry --smpratio 1 --tail mlp --lr 5e-4 --dtw --kmedians --amp
 
 Possible `argument`s are presented below. 
 
@@ -27,7 +27,7 @@ Possible `argument`s are presented below.
     <tr> <td rowspan="6"> <b>Shapelet<br>& Graph</b>
     </td> <td> <code>--nshapelet</code> </td> <td> Number of shapelets to extract </td> <td> 30 </td> </tr>
     <tr> <td> <code>--nsegment</code> </td> <td> Number of segments for mapping </td> <td> 20 </td> </tr>
-    <tr> <td> <code>--smpratio</code> </td> <td> Pos/Neg ratio for up/downsampling<br>(set to 0 = disable biased sampling) </td> <td> 0 </td> </tr>
+    <tr> <td> <code>--smpratio</code> </td> <td> Pos/Neg ratio for up/downsampling<br>(set to 0 = disable biased sampling,<br>forced to 0 for multi-class datasets) </td> <td> 0 </td> </tr>
     <tr> <td> <code>--maxiter</code> </td> <td> Max number of KMeans iterations </td> <td> 300 </td> </tr>
     <tr> <td> <code>--tol</code> </td> <td> Tolerance of KMeans </td> <td> 0.0001 </td> </tr>
     </td> <td> <code>--percent</code> </td> <td> Percentile for pruning weak edges </td> <td> 30 </td> </tr>
@@ -39,14 +39,16 @@ Possible `argument`s are presented below.
     <tr> <td> <code>--negslope</code> </td> <td> Negative slope of <code>LeakyReLU</code> </td> <td> 0.2 </td> </tr>
     <tr> <td> <code>--dropout</code> </td> <td> Dropout rate </td> <td> 0.5 </td> </tr>
     <tr> <td> <code>--tail</code> </td> <td> Type of prediction tail<br>(One of <code>none</code>, <code>linear</code>, <code>mlp</code>, <code>resnet</code>) </td> <td> <code>linear</code> </td> </tr>
-    <tr> <td rowspan="5"> <b>Training</b>
+    <tr> <td rowspan="7"> <b>Training</b>
     </td> <td> <code>--nepoch</code> </td> <td> Number of epochs </td> <td> 100 </td> </tr>
     <tr> <td> <code>--nbatch</code> </td> <td> Number of mini-batches </td> <td> 16 </td> </tr>
-    <tr> <td> <code>--optim</code> </td> <td> Optimization algorithm for learning<br>(See <a href="https://pytorch.org/docs/stable/optim.html#algorithms"><code>torch.optim</code></a> for a list) </td> <td> <code>Adam</code> </td> </tr>
+    <tr> <td> <code>--optim</code> </td> <td> Optimization algorithm for learning<br>(See <a href="https://pytorch.org/docs/stable/optim.html#algorithms"><code>torch.optim</code> algorithms</a> for a list) </td> <td> <code>Adam</code> </td> </tr>
     <tr> <td> <code>--lr</code> </td> <td> Learning rate </td> <td> 0.001 </td> </tr>
     <tr> <td> <code>--wd</code> </td> <td> Weight decay </td> <td> 0.001 </td> </tr>
-    <tr> <td rowspan="11"> <b>Enhancements</b>
-    <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2VEC</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--amp</code> </td> <td> <i>Switch</i><b>*</b> for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--f1</code> </td> <td> <i>Switch</i><b>*</b> for reporting F1 score in place of loss<br>(Forced to 0 for multi-class datasets) </td> <td> <code>False</code> </td> </tr>
+    <tr> <td rowspan="10"> <b>Enhancements</b>
+    <tr> <td> <code>--ts2vec</code> </td> <td> <i>Switch</i><b>*</b> for using <i>TS2Vec</i><b>**</b> </td> <td> <code>False</code> </td> </tr>
     <tr> <td> <code>--ts2vec-dhidden</code> </td> <td> Hidden dimension of TS2Vec encoder </td> <td> 64 </td> </tr>
     <tr> <td> <code>--ts2vec-dembed</code> </td> <td> Embedding dimension of TS2Vec encoder </td> <td> 320 </td> </tr>
     <tr> <td> <code>--ts2vec-nlayer</code> </td> <td> Number of layers in TS2Vec encoder </td> <td> 10 </td> </tr>
@@ -54,8 +56,7 @@ Possible `argument`s are presented below.
     <tr> <td> <code>--dtw-dist</code> </td> <td> Pointwise distance function of DTW (See<br><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html"><code>scipy.spatial.distance.cdist</code></a> for a list) </td> <td> <code>euclidean</code> </td> </tr>
     <tr> <td> <code>--dtw-step</code> </td> <td> Local warping step pattern of DTW<br>(See <a href="https://github.com/DynamicTimeWarping/dtw-python/blob/master/dtw/stepPattern.py#L44"><code>dtw/stepPattern.py</code></a> for a list) </td> <td> <code>symmetric2</code> </td> </tr>
     <tr> <td> <code>--dtw-window</code> </td> <td> Windowing function of DTW (One of<br><code>none</code>, <code>sakoechiba</code>, <code>itakura</code>, <code>slantedband</code>) </td> <td> <code>none</code> </td> </tr>
-    <tr> <td> <code>--kmedians</code> </td> <td> <i>Switch</i><b>*</b> for using KMedians<br>in place of KMeans in clustering </td> <td> <code>False</code> </td> </tr>
-    <tr> <td> <code>--amp</code> </td> <td> <i>Switch</i><b>*</b> for using Automatic Mixed Precision<br>(Forced to <code>False</code> unless <code>device</code> is <code>cuda</code>) </td> <td> <code>False</code> </td> </tr>
+    <tr> <td> <code>--kmedians</code> </td> <td> <i>Switch</i><b>*</b> for using KMedians in place of<br>KMeans in clustering </td> <td> <code>False</code> </td> </tr>
 </table>
 
 ***\*** Switches have `action='store_true'`: their presence means `True`, and absence means `False`.<br>&emsp; Usage like `... --switch True` or `... --switch False` would result in a parsing error.*
@@ -122,9 +123,9 @@ Possible `argument`s are presented below.
     - **Copyright (c) 2019 Toni Giorgino**
 - GAT structure by [Veličković et al., 2017](https://arxiv.org/abs/1710.10903), code inspired by [Stanford CS224w](https://colab.research.google.com/drive/1X4uOWv_xkefDu_h-pbJg-fEkMfR7NGz9?usp=sharing), [pyg-team](https://github.com/pyg-team/pytorch_geometric/blob/master/examples/gat.py), [DGraphXinye@GitHub](https://github.com/DGraphXinye/DGraphFin_baseline/blob/master/models/gat.py)
     - **Copyright (c) 2021 Matthias Fey, Jiaxuan You** (pyg-team)
-- MLP & ResNet (prediction tail) structures inspired by [Wang et al., 2017](https://ieeexplore.ieee.org/document/7966039)
-- Data from [the 
-UCR Time Series Classification Archive](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/), as documented in [Dau et al., 2018](https://arxiv.org/abs/1810.07758)
+- MLP & ResNet (prediction tail) structures and hyperparameters inspired by [Wang et al., 2017](https://ieeexplore.ieee.org/document/7966039)
+- PyTorch implementation of F1 Score originally written by [Michal Haltuf on Kaggle](https://www.kaggle.com/rejpalcz/best-loss-function-for-f1-score-metric), adapted by [SuperShinyEyes@GitHub Gist](https://gist.github.com/SuperShinyEyes/dcc68a08ff8b615442e3bc6a9b55a354)
+- Data from [the UCR Time Series Classification Archive](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/), as documented in [Dau et al., 2018](https://arxiv.org/abs/1810.07758)
 - Python modules: [`torch`](https://pytorch.org/docs/stable/index.html), [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/), [`kmeans`](https://pypi.org/project/kmeans-pytorch/), [`dtw`](https://dynamictimewarping.github.io/python/), [`xgboost`](https://xgboost.readthedocs.io/en/stable/python/index.html)
 
 ## Easter Egg

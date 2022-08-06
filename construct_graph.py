@@ -4,10 +4,10 @@ from tqdm import tqdm
 from ts2vec import TS2Vec
 from utils import pairwise_euc_dist, pairwise_dtw_dist, minmax_scale
 
-def kmeans(points, num_clusters, args, dtype):
+def kmeans(points, ncluster, args, dtype):
     points = points.float().to(args.device)
-    num_samples = len(points)
-    indices = np.random.choice(num_samples, num_clusters, replace=False)
+    nsample = len(points)
+    indices = np.random.choice(nsample, ncluster, replace=False)
     centers = points[indices]
     iteration = 0
     tqdm_meter = tqdm(desc='[Extracting %sShapelets]' % dtype)
@@ -16,7 +16,7 @@ def kmeans(points, num_clusters, args, dtype):
         else: dist = pairwise_euc_dist(points, centers)
         classes = torch.argmin(dist, dim=1)
         initial_state_pre = centers.clone()
-        for index in range(num_clusters):
+        for index in range(ncluster):
             selected = torch.nonzero(classes == index).squeeze().to(args.device)
             selected = torch.index_select(points, 0, selected)
             if args.kmedians: centers[index] = selected.median(dim=0).values
@@ -32,7 +32,7 @@ def kmeans(points, num_clusters, args, dtype):
         if center_shift ** 2 < args.tol: break
     return dist.cpu(), classes.cpu(), centers.cpu()
 
-def extract_shapelets(series_set, num_shapelets, args, dtype):
+def extract_shapelets(series_set, nshapelet, args, dtype):
     cands = np.concatenate([series_set[:, i : i + args.lshapelet] \
                             for i in range(args.lseries - args.lshapelet + 1)])
     if args.ts2vec:
@@ -43,13 +43,13 @@ def extract_shapelets(series_set, num_shapelets, args, dtype):
                         depth=args.ts2vec_nlayer)
         model.fit(cands)
         cands = model.encode(cands)
-    dist, classes, centers = kmeans(torch.from_numpy(cands), num_shapelets, args, dtype)
+    dist, classes, centers = kmeans(torch.from_numpy(cands), nshapelet, args, dtype)
     if args.device == 'cuda': torch.cuda.empty_cache()
     if args.kmedians: return centers.cpu().numpy()
     dist = dist.cpu().numpy().min(axis=1)
     classes = classes.cpu().numpy()
     shapelets = []
-    for i in range(num_shapelets):
+    for i in range(nshapelet):
         shapelets.append(cands[classes == i][np.argmin(dist[classes == i])])
     return np.stack(shapelets)
 
@@ -58,7 +58,7 @@ def embed_series(series_set, shapelets, args, dtype):
     residual = args.lseries % args.lshapelet
     for i, series in tqdm(enumerate(series_set), desc='[Embedding %s Series]' % dtype):
         if residual: series = series[:-residual]
-        segments = series.reshape(-1, args.lshapelet)
+        segments = series.reshape(-1, args.lshapelet)[:args.nsegment]
         if args.dtw: embedding[i] = pairwise_dtw_dist(shapelets, segments, args)
         else: embedding[i] = pairwise_euc_dist(shapelets, segments)
     return embedding

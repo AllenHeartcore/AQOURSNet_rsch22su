@@ -5,9 +5,7 @@ from dtw import dtw
 from torch_geometric.data import Data, Dataset
 from torch_geometric.loader import DataLoader
 
-def write_log(log_filename, message):
-    with open(log_filename, 'a') as log:
-        log.write(message)
+# main.py
 
 def seed_torch(seed):
     random.seed(seed)
@@ -30,9 +28,9 @@ def check_validity(args, allow_zero):
 def get_eigenvalue(args, evtype):
     argsval = tuple(args.__dict__.values())
     argsval = [str(i) for i in argsval]
-    if evtype == 'shape': argsval = '-'.join(argsval[3:8] + argsval[21:30])
-    if evtype == 'graph': argsval = '-'.join(argsval[3:9] + argsval[21:30])
-    if evtype == 'model': argsval = '-'.join(argsval[3:16] + argsval[21:30])
+    if evtype == 'shape': argsval = '-'.join(argsval[3:8] + argsval[23:32])
+    if evtype == 'graph': argsval = '-'.join(argsval[3:9] + argsval[23:32])
+    if evtype == 'model': argsval = '-'.join(argsval[3:16] + argsval[23:32])
     salt = [str(args.seed)] * 8
     salt = '$1$' + ''.join(salt)
     eigenvalue = crypt(argsval, salt)[12:]
@@ -65,6 +63,8 @@ def graph_dataloader(node_features, edge_matrices, labels, args):
     return DataLoader(dataset, batch_size=args.batchsize,
                       shuffle=True, num_workers=torch.cuda.device_count())
 
+# construct_graph.py
+
 def pairwise_euc_dist(A, B):
     if isinstance(A, torch.Tensor):
         A = A.unsqueeze(dim=1)
@@ -90,3 +90,18 @@ def pairwise_dtw_dist(A, B, args):
 
 def minmax_scale(arr):
     return (arr - arr.min()) / (arr.max() - arr.min())
+
+# process.py
+
+def write_log(log_filename, message):
+    with open(log_filename, 'a') as log:
+        log.write(message)
+
+def prf_score(y_pred, y_true, epsilon=1e-7):
+    y_pred = y_pred.argmax(dim=1)
+    tp = (y_true * y_pred).sum().float()
+    fp = ((1 - y_true) * y_pred).sum().float()
+    fn = (y_true * (1 - y_pred)).sum().float()
+    prec = tp / (tp + fp + epsilon)
+    recl = tp / (tp + fn + epsilon)
+    return prec * 100, recl * 100, (prec * recl) / (prec + recl + epsilon) * 200
